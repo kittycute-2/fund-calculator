@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
     <title>多笔持仓 · 基金份额计算器</title>
     <style>
         /* ---------- 全局重置 & 基础 ---------- */
@@ -10,29 +10,30 @@
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: linear-gradient(145deg, #f0f5ff 0%, #e6edf9 100%);
+            background: #f2f7ff;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            padding: 20px;
+            padding: 12px;
             margin: 0;
         }
 
         /* ---------- 主容器 ---------- */
         .container {
-            max-width: 880px;
+            max-width: 480px;
             width: 100%;
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-radius: 40px;
-            padding: 32px 28px 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25), 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-radius: 32px;
+            padding: 20px 16px 20px;
+            box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.20);
             border: 1px solid rgba(255, 255, 255, 0.6);
             transition: all 0.2s ease;
         }
@@ -41,18 +42,18 @@
         .header {
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 28px;
+            gap: 12px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
         }
 
         .header-icon {
-            font-size: 34px;
+            font-size: 28px;
             line-height: 1;
         }
 
         .header-text h1 {
-            font-size: 26px;
+            font-size: 22px;
             font-weight: 700;
             color: #0b1e3a;
             letter-spacing: -0.3px;
@@ -60,7 +61,7 @@
         }
 
         .header-text p {
-            font-size: 15px;
+            font-size: 14px;
             color: #4a5b7c;
             font-weight: 400;
             margin-top: 2px;
@@ -69,55 +70,37 @@
 
         /* ---------- 卡片网格 ---------- */
         .cards-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 18px;
-            margin-bottom: 24px;
-        }
-
-        @media (max-width: 700px) {
-            .cards-grid {
-                grid-template-columns: 1fr;
-                gap: 16px;
-            }
-            .container {
-                padding: 20px 16px 20px;
-            }
-            .header-text h1 {
-                font-size: 22px;
-            }
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 20px;
         }
 
         /* ---------- 卡片 ---------- */
         .card {
             background: #ffffff;
             border-radius: 24px;
-            padding: 20px 18px 22px;
-            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.06);
+            padding: 18px 16px 20px;
+            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.04);
             border: 1px solid rgba(255, 255, 255, 0.7);
-            transition: box-shadow 0.2s ease, transform 0.15s ease;
+            transition: box-shadow 0.2s ease;
             display: flex;
             flex-direction: column;
-        }
-
-        .card:hover {
-            box-shadow: 0 8px 24px rgba(0, 20, 60, 0.10);
-            transform: translateY(-2px);
         }
 
         .card-title {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 17px;
+            font-size: 16px;
             font-weight: 600;
             color: #0b1e3a;
-            margin-bottom: 16px;
+            margin-bottom: 14px;
             flex-wrap: wrap;
         }
 
         .card-title .badge {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 500;
             background: #eef3fc;
             color: #1f4b8a;
@@ -127,13 +110,11 @@
             margin-left: auto;
         }
 
-        /* 历史持仓卡片微紫色调 */
         .card-history .card-title .badge {
             background: #ede7f6;
             color: #5e3a8a;
         }
 
-        /* 新增购入卡片微绿色调 */
         .card-buy .card-title .badge {
             background: #dcfce7;
             color: #166b3b;
@@ -145,20 +126,20 @@
             flex-direction: column;
             gap: 10px;
             margin-bottom: 12px;
-            max-height: 320px;
+            max-height: 340px;
             overflow-y: auto;
-            padding-right: 4px;
+            padding-right: 2px;
         }
 
         .entry-row {
             display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 10px;
-            align-items: end;
-            background: #f7faff;
+            grid-template-columns: 1fr 1fr auto auto;
+            gap: 8px;
+            align-items: center;
+            background: #f8fbff;
             border-radius: 16px;
-            padding: 12px 14px 12px 14px;
-            border: 1.5px solid #e2eaf5;
+            padding: 10px 12px 10px 12px;
+            border: 1.5px solid #e8eff8;
             transition: border-color 0.2s ease;
         }
 
@@ -171,7 +152,7 @@
         }
 
         .entry-row .input-group label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: #4a5b7c;
             margin-bottom: 2px;
@@ -183,7 +164,7 @@
             border-radius: 10px;
             border: 1px solid #d9e2ef;
             overflow: hidden;
-            height: 38px;
+            height: 34px;
         }
 
         .entry-row .input-row:focus-within {
@@ -192,28 +173,30 @@
         }
 
         .entry-row .input-row .prefix {
-            padding: 0 6px 0 10px;
-            font-size: 14px;
-            line-height: 38px;
+            padding: 0 4px 0 8px;
+            font-size: 13px;
+            line-height: 34px;
             color: #6b7f9e;
         }
 
         .entry-row .input-row input {
-            padding: 0 10px 0 0;
-            font-size: 15px;
+            padding: 0 6px 0 0;
+            font-size: 14px;
             font-weight: 500;
-            line-height: 38px;
-            height: 38px;
+            line-height: 34px;
+            height: 34px;
+            width: 100%;
+            min-width: 0;
         }
 
         /* 份额迷你显示 */
         .mini-shares {
             background: #eef3fc;
             border-radius: 10px;
-            padding: 4px 10px;
+            padding: 2px 6px;
             text-align: center;
-            min-width: 70px;
-            height: 38px;
+            min-width: 60px;
+            height: 34px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -222,14 +205,14 @@
         }
 
         .mini-shares .label-sm {
-            font-size: 10px;
+            font-size: 9px;
             color: #6b7f9e;
             font-weight: 500;
             line-height: 1;
         }
 
         .mini-shares .value-sm {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 600;
             color: #0b1e3a;
             line-height: 1.2;
@@ -239,17 +222,17 @@
             background: none;
             border: none;
             color: #a0b4d0;
-            font-size: 20px;
+            font-size: 18px;
             cursor: pointer;
-            padding: 0 6px;
-            height: 38px;
+            padding: 0 4px;
+            height: 34px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: color 0.15s ease, transform 0.1s ease;
-            border-radius: 10px;
+            border-radius: 8px;
             background: transparent;
-            width: 36px;
+            width: 30px;
             font-weight: 300;
         }
 
@@ -296,13 +279,13 @@
             margin-top: 14px;
             background: #f0f5fe;
             border-radius: 14px;
-            padding: 10px 16px;
+            padding: 10px 14px;
             border: 1px solid #e2eaf5;
             display: flex;
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
             color: #1e314a;
         }
@@ -316,18 +299,18 @@
         .history-total .ht-item .num {
             font-weight: 700;
             color: #0b1e3a;
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .history-total .ht-item .num .u {
             font-weight: 400;
             color: #6b7f9e;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         /* ---------- 新增购入（右侧卡片） ---------- */
         .card-buy .input-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .card-buy .input-group:last-of-type {
@@ -340,7 +323,7 @@
             justify-content: space-between;
             background: #f0f5fe;
             border-radius: 14px;
-            padding: 10px 16px;
+            padding: 10px 14px;
             margin-top: 12px;
             border: 1px solid #e2eaf5;
         }
@@ -352,14 +335,14 @@
         }
 
         .card-buy .share-display .value {
-            font-size: 18px;
+            font-size: 17px;
             font-weight: 600;
             color: #0b1e3a;
             font-variant-numeric: tabular-nums;
         }
 
         .card-buy .share-display .value .unit {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 400;
             color: #6b7f9e;
             margin-left: 4px;
@@ -369,39 +352,30 @@
         .result-section {
             background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
             border-radius: 24px;
-            padding: 22px 22px 20px;
+            padding: 18px 16px 16px;
             border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 16px rgba(0, 20, 40, 0.05);
-            margin-top: 6px;
+            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.05);
+            margin-top: 4px;
         }
 
         .result-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 14px;
-            margin-bottom: 18px;
-        }
-
-        @media (max-width: 480px) {
-            .result-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-            .result-grid .result-item:last-child {
-                grid-column: span 2;
-            }
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 16px;
         }
 
         .result-item {
             background: #ffffff;
             border-radius: 16px;
-            padding: 14px 16px;
+            padding: 12px 8px;
             box-shadow: 0 2px 6px rgba(0, 20, 40, 0.04);
             border: 1px solid #edf3fa;
             text-align: center;
         }
 
         .result-item .r-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             color: #6b7f9e;
             text-transform: uppercase;
@@ -411,17 +385,17 @@
         }
 
         .result-item .r-value {
-            font-size: 22px;
+            font-size: 19px;
             font-weight: 700;
             color: #0b1e3a;
             font-variant-numeric: tabular-nums;
         }
 
         .result-item .r-value .r-unit {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 400;
             color: #6b7f9e;
-            margin-left: 3px;
+            margin-left: 2px;
         }
 
         .result-item.highlight .r-value {
@@ -429,7 +403,7 @@
         }
 
         .result-item .r-sub {
-            font-size: 13px;
+            font-size: 12px;
             color: #4a5b7c;
             margin-top: 2px;
             font-weight: 400;
@@ -440,17 +414,18 @@
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 500;
-            padding: 6px 14px;
+            padding: 6px 12px;
             border-radius: 30px;
             background: #eff6ff;
             color: #1a4b8a;
-            margin-bottom: 14px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
         }
 
         .cost-change .arrow {
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .cost-change.up {
@@ -472,16 +447,16 @@
         .process-box {
             background: #f7faff;
             border-radius: 16px;
-            padding: 16px 18px;
+            padding: 14px 14px;
             border: 1px solid #e2eaf5;
-            margin-top: 6px;
+            margin-top: 4px;
         }
 
         .process-box .p-title {
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 600;
             color: #3a4e6e;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             letter-spacing: 0.3px;
             display: flex;
             align-items: center;
@@ -489,13 +464,14 @@
         }
 
         .process-box .p-step {
-            font-size: 14px;
+            font-size: 13px;
             color: #1e314a;
-            line-height: 1.7;
+            line-height: 1.6;
             font-family: "SF Mono", "Menlo", "Consolas", monospace;
             font-variant-numeric: tabular-nums;
-            padding: 1px 0;
+            padding: 2px 0;
             border-bottom: 1px dashed #e8eff8;
+            word-break: break-word;
         }
 
         .process-box .p-step:last-child {
@@ -518,15 +494,15 @@
             flex-wrap: wrap;
             justify-content: space-between;
             align-items: center;
-            margin-top: 20px;
-            gap: 12px;
+            margin-top: 18px;
+            gap: 10px;
         }
 
         .btn-reset {
             background: #ffffff;
             border: 1.5px solid #d9e2ef;
             border-radius: 30px;
-            padding: 10px 26px;
+            padding: 10px 22px;
             font-size: 14px;
             font-weight: 500;
             color: #3a4e6e;
@@ -550,7 +526,7 @@
         }
 
         .tip {
-            font-size: 13px;
+            font-size: 12px;
             color: #6b7f9e;
             display: flex;
             align-items: center;
@@ -558,7 +534,7 @@
         }
 
         .tip span {
-            font-size: 16px;
+            font-size: 15px;
         }
 
         /* ---------- 辅助类 ---------- */
@@ -566,14 +542,10 @@
             color: #6b7f9e;
         }
 
-        .mt-8 {
-            margin-top: 8px;
-        }
-
         /* ---------- 滚动条美化 ---------- */
         ::-webkit-scrollbar {
-            width: 4px;
-            height: 4px;
+            width: 3px;
+            height: 3px;
         }
 
         ::-webkit-scrollbar-track {
@@ -616,28 +588,28 @@
             display: flex;
             align-items: center;
             background: #f7faff;
-            border-radius: 14px;
+            border-radius: 12px;
             border: 1.5px solid #e2eaf5;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
             overflow: hidden;
         }
 
         .input-row .prefix {
-            padding: 0 10px 0 14px;
-            font-size: 15px;
+            padding: 0 8px 0 12px;
+            font-size: 14px;
             font-weight: 500;
             color: #6b7f9e;
             background: transparent;
             user-select: none;
-            line-height: 44px;
+            line-height: 40px;
         }
 
         .input-row input[type="number"] {
             flex: 1;
             border: none;
             background: transparent;
-            padding: 10px 14px 10px 0;
-            font-size: 17px;
+            padding: 8px 12px 8px 0;
+            font-size: 16px;
             font-weight: 500;
             color: #0b1e3a;
             outline: none;
@@ -649,11 +621,11 @@
         .input-row input[type="number"]::placeholder {
             color: #b0c2da;
             font-weight: 400;
-            font-size: 15px;
+            font-size: 14px;
         }
 
         .input-group {
-            margin-bottom: 14px;
+            margin-bottom: 12px;
         }
 
         .input-group label {
@@ -663,6 +635,57 @@
             color: #3a4e6e;
             margin-bottom: 4px;
             letter-spacing: 0.2px;
+        }
+
+        /* 小屏优化：历史行改为上下结构 (grid改为两列+自动换行) */
+        @media (max-width: 420px) {
+            .entry-row {
+                grid-template-columns: 1fr 1fr;
+                gap: 6px 10px;
+                padding: 10px 10px;
+            }
+            .entry-row .input-group:nth-child(1) {
+                grid-column: 1 / 2;
+            }
+            .entry-row .input-group:nth-child(2) {
+                grid-column: 2 / 3;
+            }
+            .mini-shares {
+                grid-column: 1 / 2;
+                height: 32px;
+                min-width: auto;
+            }
+            .remove-row {
+                grid-column: 2 / 3;
+                justify-self: end;
+                height: 32px;
+                width: 32px;
+            }
+            .entry-row .input-row {
+                height: 32px;
+            }
+            .entry-row .input-row input {
+                line-height: 32px;
+                height: 32px;
+                font-size: 13px;
+            }
+            .entry-row .input-row .prefix {
+                line-height: 32px;
+            }
+        }
+
+        /* 结果网格在小屏上两列 */
+        @media (max-width: 400px) {
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+            }
+            .result-grid .result-item:last-child {
+                grid-column: span 2;
+            }
+            .result-item .r-value {
+                font-size: 17px;
+            }
         }
     </style>
 </head>
@@ -1012,15 +1035,8 @@
 
             // ---------- 绑定历史事件 (委托) ----------
             function bindHistoryEvents() {
-                // 移除旧的监听器，避免重复绑定（使用委托，只需绑定一次）
-                // 但因为动态添加，我们在初始化时统一绑定，且每次添加新行不需要重新绑定整个容器。
-                // 使用事件委托在 historyContainer 上监听 input 和 click。
-                // 在初始化时绑定一次即可。
+                // 使用事件委托，已在初始化时绑定，此处无需重复
             }
-
-            // 由于委托是绑定在 container 上的，只需执行一次。
-            // 但为了安全，我们使用一个标志或直接绑定。
-            // 实际在初始化时绑定。
 
             // ---------- 添加历史行 ----------
             function addHistoryRow(amount = '', price = '') {
