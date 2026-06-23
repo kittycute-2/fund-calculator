@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>多笔持仓 · 基金份额计算器</title>
+    <style>
+        /* ---------- 全局重置 & 基础 ---------- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f5ff 0%, #e6edf9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            padding: 20px;
+            margin: 0;
+        }
+
+        /* ---------- 主容器 ---------- */
+        .container {
+            max-width: 880px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 40px;
+            padding: 32px 28px 28px;
+            box-shadow: 0 25px 50px -12px rgba(0, 20, 60, 0.25), 0 2px 8px 0 rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            transition: all 0.2s ease;
+        }
+
+        /* ---------- 头部 ---------- */
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+        }
+
+        .header-icon {
+            font-size: 34px;
+            line-height: 1;
+        }
+
+        .header-text h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #0b1e3a;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .header-text p {
+            font-size: 15px;
+            color: #4a5b7c;
+            font-weight: 400;
+            margin-top: 2px;
+            letter-spacing: 0.2px;
+        }
+
+        /* ---------- 卡片网格 ---------- */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        @media (max-width: 700px) {
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+            .container {
+                padding: 20px 16px 20px;
+            }
+            .header-text h1 {
+                font-size: 22px;
+            }
+        }
+
+        /* ---------- 卡片 ---------- */
+        .card {
+            background: #ffffff;
+            border-radius: 24px;
+            padding: 20px 18px 22px;
+            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.7);
+            transition: box-shadow 0.2s ease, transform 0.15s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card:hover {
+            box-shadow: 0 8px 24px rgba(0, 20, 60, 0.10);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 17px;
+            font-weight: 600;
+            color: #0b1e3a;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .card-title .badge {
+            font-size: 13px;
+            font-weight: 500;
+            background: #eef3fc;
+            color: #1f4b8a;
+            padding: 0 10px;
+            border-radius: 20px;
+            line-height: 22px;
+            margin-left: auto;
+        }
+
+        /* 历史持仓卡片微紫色调 */
+        .card-history .card-title .badge {
+            background: #ede7f6;
+            color: #5e3a8a;
+        }
+
+        /* 新增购入卡片微绿色调 */
+        .card-buy .card-title .badge {
+            background: #dcfce7;
+            color: #166b3b;
+        }
+
+        /* ---------- 历史记录区域 ---------- */
+        #historyContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-bottom: 12px;
+            max-height: 320px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .entry-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+            background: #f7faff;
+            border-radius: 16px;
+            padding: 12px 14px 12px 14px;
+            border: 1.5px solid #e2eaf5;
+            transition: border-color 0.2s ease;
+        }
+
+        .entry-row:hover {
+            border-color: #cad6e8;
+        }
+
+        .entry-row .input-group {
+            margin-bottom: 0;
+        }
+
+        .entry-row .input-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #4a5b7c;
+            margin-bottom: 2px;
+            display: block;
+        }
+
+        .entry-row .input-row {
+            background: #ffffff;
+            border-radius: 10px;
+            border: 1px solid #d9e2ef;
+            overflow: hidden;
+            height: 38px;
+        }
+
+        .entry-row .input-row:focus-within {
+            border-color: #3b7cff;
+            box-shadow: 0 0 0 3px rgba(59, 124, 255, 0.10);
+        }
+
+        .entry-row .input-row .prefix {
+            padding: 0 6px 0 10px;
+            font-size: 14px;
+            line-height: 38px;
+            color: #6b7f9e;
+        }
+
+        .entry-row .input-row input {
+            padding: 0 10px 0 0;
+            font-size: 15px;
+            font-weight: 500;
+            line-height: 38px;
+            height: 38px;
+        }
+
+        /* 份额迷你显示 */
+        .mini-shares {
+            background: #eef3fc;
+            border-radius: 10px;
+            padding: 4px 10px;
+            text-align: center;
+            min-width: 70px;
+            height: 38px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 1px solid #d9e2ef;
+        }
+
+        .mini-shares .label-sm {
+            font-size: 10px;
+            color: #6b7f9e;
+            font-weight: 500;
+            line-height: 1;
+        }
+
+        .mini-shares .value-sm {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0b1e3a;
+            line-height: 1.2;
+        }
+
+        .remove-row {
+            background: none;
+            border: none;
+            color: #a0b4d0;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0 6px;
+            height: 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: color 0.15s ease, transform 0.1s ease;
+            border-radius: 10px;
+            background: transparent;
+            width: 36px;
+            font-weight: 300;
+        }
+
+        .remove-row:hover {
+            color: #d14c4c;
+            background: #fef0f0;
+        }
+
+        .remove-row:active {
+            transform: scale(0.9);
+        }
+
+        /* 添加按钮 */
+        .add-row-btn {
+            background: #f0f5fe;
+            border: 1.5px dashed #bccde2;
+            border-radius: 30px;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #2f4b7a;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            width: fit-content;
+            font-family: inherit;
+            margin-top: 2px;
+        }
+
+        .add-row-btn:hover {
+            background: #e6efff;
+            border-color: #8aa9d4;
+            color: #0b1e3a;
+        }
+
+        .add-row-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* 历史汇总 */
+        .history-total {
+            margin-top: 14px;
+            background: #f0f5fe;
+            border-radius: 14px;
+            padding: 10px 16px;
+            border: 1px solid #e2eaf5;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            font-weight: 500;
+            color: #1e314a;
+        }
+
+        .history-total .ht-item {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .history-total .ht-item .num {
+            font-weight: 700;
+            color: #0b1e3a;
+            font-size: 16px;
+        }
+
+        .history-total .ht-item .num .u {
+            font-weight: 400;
+            color: #6b7f9e;
+            font-size: 13px;
+        }
+
+        /* ---------- 新增购入（右侧卡片） ---------- */
+        .card-buy .input-group {
+            margin-bottom: 14px;
+        }
+
+        .card-buy .input-group:last-of-type {
+            margin-bottom: 0;
+        }
+
+        .card-buy .share-display {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #f0f5fe;
+            border-radius: 14px;
+            padding: 10px 16px;
+            margin-top: 12px;
+            border: 1px solid #e2eaf5;
+        }
+
+        .card-buy .share-display .label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #3a4e6e;
+        }
+
+        .card-buy .share-display .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #0b1e3a;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .card-buy .share-display .value .unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: #6b7f9e;
+            margin-left: 4px;
+        }
+
+        /* ---------- 结果区域 ---------- */
+        .result-section {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
+            border-radius: 24px;
+            padding: 22px 22px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 16px rgba(0, 20, 40, 0.05);
+            margin-top: 6px;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+            margin-bottom: 18px;
+        }
+
+        @media (max-width: 480px) {
+            .result-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            .result-grid .result-item:last-child {
+                grid-column: span 2;
+            }
+        }
+
+        .result-item {
+            background: #ffffff;
+            border-radius: 16px;
+            padding: 14px 16px;
+            box-shadow: 0 2px 6px rgba(0, 20, 40, 0.04);
+            border: 1px solid #edf3fa;
+            text-align: center;
+        }
+
+        .result-item .r-label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #6b7f9e;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .result-item .r-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0b1e3a;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .result-item .r-value .r-unit {
+            font-size: 14px;
+            font-weight: 400;
+            color: #6b7f9e;
+            margin-left: 3px;
+        }
+
+        .result-item.highlight .r-value {
+            color: #1a5cff;
+        }
+
+        .result-item .r-sub {
+            font-size: 13px;
+            color: #4a5b7c;
+            margin-top: 2px;
+            font-weight: 400;
+        }
+
+        /* ---------- 成本变化标签 ---------- */
+        .cost-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            padding: 6px 14px;
+            border-radius: 30px;
+            background: #eff6ff;
+            color: #1a4b8a;
+            margin-bottom: 14px;
+        }
+
+        .cost-change .arrow {
+            font-size: 16px;
+        }
+
+        .cost-change.up {
+            background: #fee9e7;
+            color: #b33a34;
+        }
+
+        .cost-change.down {
+            background: #e1f7e8;
+            color: #0f6e3a;
+        }
+
+        .cost-change.neutral {
+            background: #f0f0f0;
+            color: #5a5a5a;
+        }
+
+        /* ---------- 计算过程 ---------- */
+        .process-box {
+            background: #f7faff;
+            border-radius: 16px;
+            padding: 16px 18px;
+            border: 1px solid #e2eaf5;
+            margin-top: 6px;
+        }
+
+        .process-box .p-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: #3a4e6e;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .process-box .p-step {
+            font-size: 14px;
+            color: #1e314a;
+            line-height: 1.7;
+            font-family: "SF Mono", "Menlo", "Consolas", monospace;
+            font-variant-numeric: tabular-nums;
+            padding: 1px 0;
+            border-bottom: 1px dashed #e8eff8;
+        }
+
+        .process-box .p-step:last-child {
+            border-bottom: none;
+        }
+
+        .process-box .p-step .hl {
+            font-weight: 600;
+            color: #0b1e3a;
+        }
+
+        .process-box .p-step .dim {
+            color: #6b7f9e;
+            font-weight: 400;
+        }
+
+        /* ---------- 底部操作栏 ---------- */
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            gap: 12px;
+        }
+
+        .btn-reset {
+            background: #ffffff;
+            border: 1.5px solid #d9e2ef;
+            border-radius: 30px;
+            padding: 10px 26px;
+            font-size: 14px;
+            font-weight: 500;
+            color: #3a4e6e;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+
+        .btn-reset:hover {
+            background: #f0f5ff;
+            border-color: #b0c8e8;
+            color: #0b1e3a;
+            transform: scale(0.97);
+        }
+
+        .btn-reset:active {
+            transform: scale(0.94);
+        }
+
+        .tip {
+            font-size: 13px;
+            color: #6b7f9e;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .tip span {
+            font-size: 16px;
+        }
+
+        /* ---------- 辅助类 ---------- */
+        .text-muted {
+            color: #6b7f9e;
+        }
+
+        .mt-8 {
+            margin-top: 8px;
+        }
+
+        /* ---------- 滚动条美化 ---------- */
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #eef3fa;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c5d4e8;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a9bcd8;
+        }
+
+        /* 针对Firefox */
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        /* ---------- 动画 ---------- */
+        @keyframes fadeSlideUp {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-section {
+            animation: fadeSlideUp 0.3s ease-out;
+        }
+
+        /* 输入框通用 */
+        .input-row {
+            display: flex;
+            align-items: center;
+            background: #f7faff;
+            border-radius: 14px;
+            border: 1.5px solid #e2eaf5;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+            overflow: hidden;
+        }
+
+        .input-row .prefix {
+            padding: 0 10px 0 14px;
+            font-size: 15px;
+            font-weight: 500;
+            color: #6b7f9e;
+            background: transparent;
+            user-select: none;
+            line-height: 44px;
+        }
+
+        .input-row input[type="number"] {
+            flex: 1;
+            border: none;
+            background: transparent;
+            padding: 10px 14px 10px 0;
+            font-size: 17px;
+            font-weight: 500;
+            color: #0b1e3a;
+            outline: none;
+            width: 100%;
+            min-width: 0;
+            font-family: inherit;
+        }
+
+        .input-row input[type="number"]::placeholder {
+            color: #b0c2da;
+            font-weight: 400;
+            font-size: 15px;
+        }
+
+        .input-group {
+            margin-bottom: 14px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #3a4e6e;
+            margin-bottom: 4px;
+            letter-spacing: 0.2px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-icon">📊</div>
+            <div class="header-text">
+                <h1>多笔持仓 · 成本计算器</h1>
+                <p>支持多笔历史买入，计算加仓后的加权平均成本</p>
+            </div>
+        </div>
+
+        <!-- 输入卡片 -->
+        <div class="cards-grid">
+            <!-- 历史持仓 (多笔) -->
+            <div class="card card-history">
+                <div class="card-title">
+                    📂 历史持仓
+                    <span class="badge">多笔</span>
+                </div>
+
+                <div id="historyContainer">
+                    <!-- 由 JavaScript 动态渲染 -->
+                </div>
+
+                <button class="add-row-btn" id="addHistoryBtn">＋ 添加一笔历史</button>
+
+                <div class="history-total">
+                    <span class="ht-item">📌 总投入 <span class="num" id="histTotalAmount">¥0.00</span></span>
+                    <span class="ht-item">📦 总份额 <span class="num" id="histTotalShares">0.0000 <span class="u">份</span></span></span>
+                </div>
+            </div>
+
+            <!-- 新增购入 -->
+            <div class="card card-buy">
+                <div class="card-title">
+                    💰 新增购入
+                    <span class="badge">预期加仓</span>
+                </div>
+                <div class="input-group">
+                    <label>投入金额（元）</label>
+                    <div class="input-row">
+                        <span class="prefix">¥</span>
+                        <input type="number" id="newAmount" placeholder="0.00" step="0.01" min="0" value="5000" />
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>基金单价（元）</label>
+                    <div class="input-row">
+                        <span class="prefix">¥</span>
+                        <input type="number" id="newPrice" placeholder="0.0000" step="0.0001" min="0.0001" value="1.2000" />
+                    </div>
+                </div>
+                <div class="share-display">
+                    <span class="label">📦 购入份额</span>
+                    <span class="value" id="newShares">0.0000 <span class="unit">份</span></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 结果区域 -->
+        <div class="result-section" id="resultSection">
+            <!-- 成本变化标签 -->
+            <div id="costChangeBadge" class="cost-change neutral">
+                <span class="arrow">—</span> 等待输入
+            </div>
+
+            <!-- 核心结果 -->
+            <div class="result-grid">
+                <div class="result-item">
+                    <span class="r-label">💰 总投入</span>
+                    <span class="r-value" id="totalAmount">¥0.00</span>
+                </div>
+                <div class="result-item">
+                    <span class="r-label">📦 总份额</span>
+                    <span class="r-value" id="totalShares">0.0000 <span class="r-unit">份</span></span>
+                </div>
+                <div class="result-item highlight">
+                    <span class="r-label">🎯 最终单价</span>
+                    <span class="r-value" id="avgPrice">—</span>
+                    <span class="r-sub" id="avgPriceSub">加权平均成本</span>
+                </div>
+            </div>
+
+            <!-- 计算过程 -->
+            <div class="process-box" id="processBox">
+                <div class="p-title">📝 计算过程</div>
+                <div id="processSteps">
+                    <div class="p-step dim">添加历史记录并输入金额与单价</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部操作 -->
+        <div class="actions">
+            <button class="btn-reset" id="resetBtn">↻ 重置全部</button>
+            <div class="tip">
+                <span>💡</span> 修改任意数值自动更新结果
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ---------- DOM 引用 ----------
+            const historyContainer = document.getElementById('historyContainer');
+            const addHistoryBtn = document.getElementById('addHistoryBtn');
+            const newAmount = document.getElementById('newAmount');
+            const newPrice = document.getElementById('newPrice');
+
+            const histTotalAmount = document.getElementById('histTotalAmount');
+            const histTotalShares = document.getElementById('histTotalShares');
+            const newSharesEl = document.getElementById('newShares');
+            const totalAmountEl = document.getElementById('totalAmount');
+            const totalSharesEl = document.getElementById('totalShares');
+            const avgPriceEl = document.getElementById('avgPrice');
+            const avgPriceSub = document.getElementById('avgPriceSub');
+            const costChangeBadge = document.getElementById('costChangeBadge');
+            const processSteps = document.getElementById('processSteps');
+
+            // ---------- 工具函数 ----------
+            function fmt(v, digits) {
+                if (v === undefined || v === null || !isFinite(v)) return '—';
+                return Number(v).toFixed(digits);
+            }
+
+            function fmtMoney(v) {
+                return '¥' + fmt(v, 2);
+            }
+
+            function fmtShares(v) {
+                return fmt(v, 4);
+            }
+
+            function fmtPrice(v) {
+                return fmt(v, 4);
+            }
+
+            // ---------- 模板：历史行 ----------
+            function createHistoryRow(amount = '', price = '') {
+                const div = document.createElement('div');
+                div.className = 'entry-row';
+                div.innerHTML = `
+                    <div class="input-group">
+                        <label>金额 (元)</label>
+                        <div class="input-row">
+                            <span class="prefix">¥</span>
+                            <input type="number" class="hist-amount" placeholder="0.00" step="0.01" min="0" value="${amount}" />
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <label>单价 (元)</label>
+                        <div class="input-row">
+                            <span class="prefix">¥</span>
+                            <input type="number" class="hist-price" placeholder="0.0000" step="0.0001" min="0.0001" value="${price}" />
+                        </div>
+                    </div>
+                    <div class="mini-shares">
+                        <span class="label-sm">份额</span>
+                        <span class="value-sm hist-shares">0.0000</span>
+                    </div>
+                    <button class="remove-row" type="button" title="移除这笔历史">✕</button>
+                `;
+                return div;
+            }
+
+            // ---------- 获取所有历史数据 ----------
+            function getHistoryData() {
+                const rows = historyContainer.querySelectorAll('.entry-row');
+                const data = [];
+                rows.forEach(row => {
+                    const amtInput = row.querySelector('.hist-amount');
+                    const priceInput = row.querySelector('.hist-price');
+                    const amt = parseFloat(amtInput.value) || 0;
+                    const price = parseFloat(priceInput.value) || 0;
+                    data.push({ amount: amt, price: price });
+                });
+                return data;
+            }
+
+            // ---------- 更新单行的份额显示 ----------
+            function updateRowShares(row) {
+                const amtInput = row.querySelector('.hist-amount');
+                const priceInput = row.querySelector('.hist-price');
+                const sharesSpan = row.querySelector('.hist-shares');
+                const amt = parseFloat(amtInput.value) || 0;
+                const price = parseFloat(priceInput.value) || 0;
+                const shares = (price > 0) ? amt / price : 0;
+                sharesSpan.textContent = fmtShares(shares);
+            }
+
+            // ---------- 更新所有行份额 ----------
+            function updateAllRowsShares() {
+                document.querySelectorAll('.entry-row').forEach(row => updateRowShares(row));
+            }
+
+            // ---------- 核心计算 ----------
+            function compute() {
+                // 1. 更新所有行份额（保证显示最新）
+                updateAllRowsShares();
+
+                // 2. 汇总历史
+                const history = getHistoryData();
+                let histTotalAmt = 0;
+                let histTotalShares = 0;
+                history.forEach(item => {
+                    histTotalAmt += item.amount;
+                    if (item.price > 0) {
+                        histTotalShares += item.amount / item.price;
+                    }
+                });
+
+                // 3. 新增买入
+                const newAmt = parseFloat(newAmount.value) || 0;
+                const newPrc = parseFloat(newPrice.value) || 0;
+                const newShares = (newPrc > 0) ? newAmt / newPrc : 0;
+
+                // 4. 总计
+                const totalAmt = histTotalAmt + newAmt;
+                const totalShares = histTotalShares + newShares;
+                const avgPrice = (totalShares > 0) ? totalAmt / totalShares : 0;
+
+                // ---------- 更新 UI ----------
+
+                // 历史汇总
+                histTotalAmount.textContent = fmtMoney(histTotalAmt);
+                histTotalShares.innerHTML = fmtShares(histTotalShares) + ' <span class="u">份</span>';
+
+                // 新增份额
+                newSharesEl.innerHTML = fmtShares(newShares) + ' <span class="unit">份</span>';
+
+                // 总体结果
+                totalAmountEl.textContent = fmtMoney(totalAmt);
+                totalSharesEl.innerHTML = fmtShares(totalShares) + ' <span class="r-unit">份</span>';
+
+                if (totalShares > 0 && avgPrice > 0) {
+                    avgPriceEl.textContent = '¥' + fmtPrice(avgPrice);
+                    avgPriceSub.textContent = '加权平均成本';
+                } else {
+                    avgPriceEl.textContent = '—';
+                    avgPriceSub.textContent = '请完善数据';
+                }
+
+                // ---------- 成本变化标签 (对比历史平均 vs 最终平均) ----------
+                const histAvg = (histTotalShares > 0) ? histTotalAmt / histTotalShares : 0;
+                if (histTotalShares > 0 && avgPrice > 0 && histAvg > 0) {
+                    const diff = avgPrice - histAvg;
+                    const pct = (diff / histAvg) * 100;
+                    let emoji, cls, label;
+                    if (Math.abs(diff) < 0.0001) {
+                        emoji = '—';
+                        cls = 'neutral';
+                        label = '成本未变';
+                    } else if (diff < 0) {
+                        emoji = '↓';
+                        cls = 'down';
+                        label = `成本降低 ${Math.abs(pct).toFixed(2)}% (${fmtPrice(histAvg)} → ${fmtPrice(avgPrice)})`;
+                    } else {
+                        emoji = '↑';
+                        cls = 'up';
+                        label = `成本升高 ${pct.toFixed(2)}% (${fmtPrice(histAvg)} → ${fmtPrice(avgPrice)})`;
+                    }
+                    costChangeBadge.className = 'cost-change ' + cls;
+                    costChangeBadge.innerHTML = `<span class="arrow">${emoji}</span> ${label}`;
+                } else if (histTotalShares === 0 && totalShares === 0) {
+                    costChangeBadge.className = 'cost-change neutral';
+                    costChangeBadge.innerHTML = '<span class="arrow">—</span> 请添加历史持仓或输入数据';
+                } else if (histTotalShares === 0 && totalShares > 0) {
+                    costChangeBadge.className = 'cost-change neutral';
+                    costChangeBadge.innerHTML = '<span class="arrow">📌</span> 仅有一笔买入，无历史对比';
+                } else {
+                    costChangeBadge.className = 'cost-change neutral';
+                    costChangeBadge.innerHTML = '<span class="arrow">—</span> 等待输入';
+                }
+
+                // ---------- 计算过程 ----------
+                let steps = [];
+
+                // 历史明细
+                if (history.length === 0) {
+                    steps.push(`<span class="dim">暂无历史记录，请添加。</span>`);
+                } else {
+                    steps.push(`📂 历史持仓共 <span class="hl">${history.length}</span> 笔，总投入 ${fmtMoney(histTotalAmt)}，总份额 ${fmtShares(histTotalShares)} 份`);
+                    history.forEach((item, idx) => {
+                        if (item.price > 0 && item.amount > 0) {
+                            const sh = item.amount / item.price;
+                            steps.push(`  #${idx+1}  ${fmtMoney(item.amount)} ÷ ${fmtPrice(item.price)} = ${fmtShares(sh)} 份`);
+                        } else {
+                            steps.push(`  #${idx+1}  <span class="dim">数据不完整 (金额或单价为0)</span>`);
+                        }
+                    });
+                }
+
+                // 新增
+                if (newAmt > 0 && newPrc > 0) {
+                    steps.push(`➕ 新增买入 ${fmtMoney(newAmt)} ÷ ${fmtPrice(newPrc)} = <span class="hl">${fmtShares(newShares)}</span> 份`);
+                } else if (newAmt > 0 || newPrc > 0) {
+                    steps.push(`➕ 新增买入 <span class="dim">数据不完整 (金额或单价为0)</span>`);
+                } else {
+                    steps.push(`➕ 新增买入 <span class="dim">（未填写）</span>`);
+                }
+
+                // 最终汇总
+                if (totalShares > 0 && totalAmt > 0) {
+                    steps.push(`📊 总份额 = ${fmtShares(histTotalShares)} + ${fmtShares(newShares)} = <span class="hl">${fmtShares(totalShares)}</span> 份`);
+                    steps.push(`📊 总金额 = ${fmtMoney(histTotalAmt)} + ${fmtMoney(newAmt)} = <span class="hl">${fmtMoney(totalAmt)}</span>`);
+                    steps.push(`🎯 最终单价 = ${fmtMoney(totalAmt)} ÷ ${fmtShares(totalShares)} = <span class="hl">¥${fmtPrice(avgPrice)}</span>`);
+                } else if (totalShares === 0 && totalAmt === 0) {
+                    steps.push(`<span class="dim">暂无有效数据，请填写金额和单价</span>`);
+                } else if (totalShares === 0 && totalAmt > 0) {
+                    steps.push(`<span class="dim">⚠️ 总份额为零，无法计算单价（请检查单价是否大于0）</span>`);
+                }
+
+                processSteps.innerHTML = steps.map(s =>
+                    `<div class="p-step">${s}</div>`
+                ).join('');
+            }
+
+            // ---------- 重置 ----------
+            function resetAll() {
+                // 清空历史，保留两行示例
+                historyContainer.innerHTML = '';
+                // 添加两笔示例历史
+                const defaultHistory = [
+                    { amount: 5000, price: 1.5000 },
+                    { amount: 3000, price: 1.8000 }
+                ];
+                defaultHistory.forEach(item => {
+                    historyContainer.appendChild(createHistoryRow(item.amount, item.price));
+                });
+
+                // 重置新增
+                newAmount.value = '5000';
+                newPrice.value = '1.2000';
+
+                // 重新绑定事件（因为新行没有监听器）
+                bindHistoryEvents();
+                compute();
+                // 聚焦
+                newAmount.focus();
+            }
+
+            // ---------- 绑定历史事件 (委托) ----------
+            function bindHistoryEvents() {
+                // 移除旧的监听器，避免重复绑定（使用委托，只需绑定一次）
+                // 但因为动态添加，我们在初始化时统一绑定，且每次添加新行不需要重新绑定整个容器。
+                // 使用事件委托在 historyContainer 上监听 input 和 click。
+                // 在初始化时绑定一次即可。
+            }
+
+            // 由于委托是绑定在 container 上的，只需执行一次。
+            // 但为了安全，我们使用一个标志或直接绑定。
+            // 实际在初始化时绑定。
+
+            // ---------- 添加历史行 ----------
+            function addHistoryRow(amount = '', price = '') {
+                const row = createHistoryRow(amount, price);
+                historyContainer.appendChild(row);
+                // 更新计算
+                compute();
+                // 滚动到新行
+                row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                // 聚焦到金额输入
+                const amtInput = row.querySelector('.hist-amount');
+                if (amtInput) amtInput.focus();
+            }
+
+            // ---------- 初始化 & 事件绑定 ----------
+            function init() {
+                // 填充默认历史 (两笔)
+                const defaultHistory = [
+                    { amount: 5000, price: 1.5000 },
+                    { amount: 3000, price: 1.8000 }
+                ];
+                defaultHistory.forEach(item => {
+                    historyContainer.appendChild(createHistoryRow(item.amount, item.price));
+                });
+
+                // 事件委托：监听历史容器内的 input 和 click
+                historyContainer.addEventListener('input', function(e) {
+                    const target = e.target;
+                    if (target.classList.contains('hist-amount') || target.classList.contains('hist-price')) {
+                        // 更新对应行的份额显示
+                        const row = target.closest('.entry-row');
+                        if (row) updateRowShares(row);
+                        compute();
+                    }
+                });
+
+                historyContainer.addEventListener('click', function(e) {
+                    const target = e.target;
+                    if (target.classList.contains('remove-row')) {
+                        const row = target.closest('.entry-row');
+                        if (row && historyContainer.children.length > 1) {
+                            row.remove();
+                            compute();
+                        } else if (row) {
+                            alert('至少保留一笔历史记录，以便计算。如需清空请使用"重置"按钮。');
+                        }
+                    }
+                });
+
+                // 添加按钮
+                addHistoryBtn.addEventListener('click', function() {
+                    addHistoryRow('', '');
+                });
+
+                // 新增输入
+                newAmount.addEventListener('input', compute);
+                newPrice.addEventListener('input', compute);
+                newAmount.addEventListener('change', compute);
+                newPrice.addEventListener('change', compute);
+
+                // 重置按钮
+                document.getElementById('resetBtn').addEventListener('click', resetAll);
+
+                // 首次计算
+                compute();
+            }
+
+            // 启动
+            init();
+
+        })();
+    </script>
+
+</body>
+</html>
