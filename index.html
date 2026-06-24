@@ -285,13 +285,76 @@
         .record-card-item .rc-meta .meta-val { font-weight:600; color:var(--text); font-family:var(--font-mono); }
         .record-card-item .rc-actions { display:flex; gap:4px; margin-top:6px; }
 
-        .daily-vertical {
-            display:flex; flex-direction:column; gap:8px; margin-bottom:14px;
+        /* 每日单价面板专用样式 */
+        .daily-form-card {
+            background: #f8fafc;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 12px;
+            align-items: end;
+            box-shadow: var(--shadow-sm);
         }
-        .daily-vertical input { padding:8px 12px; border:1.8px solid var(--border); border-radius:18px; font-size:0.85rem; }
-        .daily-vertical input:focus { border-color:#a5b4fc; box-shadow:0 0 0 3px rgba(79,70,229,0.06); }
-        .daily-list { display:flex; flex-direction:column; gap:6px; max-height:300px; overflow-y:auto; }
-        .daily-item { display:flex; align-items:center; justify-content:space-between; background:#fafbfc; padding:8px 12px; border-radius:var(--radius-sm); border:1px solid var(--border); font-size:0.82rem; }
+        .daily-form-card .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .daily-form-card .form-group label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-left: 4px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .daily-form-card input {
+            padding: 10px 14px;
+            border: 1.8px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            background: #fff;
+            outline: none;
+            width: 100%;
+            font-family: var(--font-sans);
+            transition: var(--transition-fast);
+        }
+        .daily-form-card input:focus {
+            border-color: #a5b4fc;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.06);
+        }
+        .daily-form-card .btn-primary {
+            height: 42px;
+            padding: 0 16px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            margin-bottom: 1px;
+        }
+        .daily-list-card {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .daily-list-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.85rem;
+            transition: var(--transition-fast);
+        }
+        .daily-list-item:last-child { border-bottom: none; }
+        .daily-list-item:hover { background: #f8fafc; }
+        .daily-list-item .dl-code { font-weight: 600; min-width: 100px; }
+        .daily-list-item .dl-price { font-family: var(--font-mono); color: var(--primary); font-weight: 600; }
+        .daily-list-item .dl-date { color: var(--text-secondary); font-size: 0.8rem; margin: 0 10px; }
+        .daily-list-empty { text-align: center; padding: 24px; color: var(--text-muted); }
 
         .overview-stats { display:flex; gap:20px; flex-wrap:wrap; margin-bottom:16px; background:#fff; padding:14px 18px; border-radius:var(--radius-lg); border:1px solid var(--border); }
         .overview-stat { text-align:center; }
@@ -317,6 +380,9 @@
             .entry-row { flex-direction:column; align-items:stretch; }
             .entry-row .field-group { flex-direction:row; }
             .records-grid { grid-template-columns:1fr; }
+            .daily-form-card {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -400,19 +466,30 @@
             </div>
         </div>
 
-        <!-- 每日单价面板 -->
+        <!-- 每日单价面板（优化后） -->
         <div class="tab-panel" id="panel-daily">
             <div class="card">
                 <div class="card-header"><h2>📆 更新每日单价</h2></div>
                 <div class="card-body">
-                    <div class="daily-vertical">
-                        <div><span class="fi-label">🏷️ 基金代码</span><input type="text" id="dailyCode" placeholder="例如：000001" maxlength="20"></div>
-                        <div><span class="fi-label">💵 当日单价</span><input type="number" id="dailyPrice" placeholder="单位净值" step="0.0001" min="0"></div>
-                        <div><span class="fi-label">📅 日期</span><input type="date" id="dailyDate"></div>
-                        <button class="btn btn-primary btn-sm" onclick="addDailyPrice()">➕ 添加单价</button>
+                    <div class="daily-form-card">
+                        <div class="form-group">
+                            <label>🏷️ 基金代码</label>
+                            <input type="text" id="dailyCode" placeholder="例如：000001" maxlength="20">
+                        </div>
+                        <div class="form-group">
+                            <label>💵 当日单价</label>
+                            <input type="number" id="dailyPrice" placeholder="单位净值" step="0.0001" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label>📅 日期</label>
+                            <input type="date" id="dailyDate">
+                        </div>
+                        <button class="btn btn-primary" onclick="addDailyPrice()">➕ 添加</button>
                     </div>
                     <div class="section-label">📋 最近录入的单价</div>
-                    <div class="daily-list" id="dailyListContainer"></div>
+                    <div class="daily-list-card" id="dailyListContainer">
+                        <div class="daily-list-empty">暂无记录</div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -431,7 +508,7 @@
             </div>
         </div>
 
-        <!-- 概览面板 (改为列表占比) -->
+        <!-- 概览面板 -->
         <div class="tab-panel" id="panel-overview">
             <div class="overview-stats" id="overviewStats">
                 <div class="overview-stat"><div class="stat-value" id="statTotalAmount">¥0</div><div class="stat-label">总持仓金额</div></div>
@@ -509,8 +586,7 @@
                 sessionStorage.setItem('fund_calc_tab',tab);
             }
 
-            // ---------- 计算器 ----------
-            let calcEntryCount=2;
+            let calcEntryCount=1;
             function createCalcRow(idx) {
                 const row=document.createElement('div'); row.className='entry-row'; row.setAttribute('data-index',idx);
                 row.innerHTML=`<span class="row-num">${idx+1}</span>
@@ -581,7 +657,7 @@
                 document.getElementById('btnSaveCalc').textContent='💾 保存记录';
                 document.getElementById('btnSaveCalc').className='btn btn-primary';
                 document.getElementById('btnCancelEditCalc').style.display='none';
-                renderCalcRows(2); autoCalc();
+                renderCalcRows(1); autoCalc();
             }
             function cancelEditCalc() { resetCalculator(); showToast('已取消编辑','info'); }
             function saveFromCalculator() {
@@ -600,7 +676,6 @@
                 }
             }
 
-            // ---------- 录入面板 ----------
             let inputRowCount=1;
             function createInputRow(idx) {
                 const row=document.createElement('div'); row.className='entry-row'; row.setAttribute('data-index',idx);
@@ -652,19 +727,26 @@
             }
             function resetInputForm() { document.getElementById('fundCodeInput').value=''; document.getElementById('fundNameInput').value=''; document.getElementById('fundSectorInput').value=''; renderInputRows(1); calcInputTotal(); }
 
-            // ---------- 每日单价 ----------
             function renderDailyList() {
                 const container = document.getElementById('dailyListContainer');
                 const allCodes = Object.keys(getDailyDB());
-                if (allCodes.length === 0) { container.innerHTML = '<div style="text-align:center;color:#94a3b8;">暂无记录</div>'; return; }
+                if (allCodes.length === 0) {
+                    container.innerHTML = '<div class="daily-list-empty">暂无记录</div>';
+                    return;
+                }
                 let html = '';
                 allCodes.forEach(code => {
                     const prices = getAllDailyPrices(code);
                     prices.forEach(item => {
-                        html += `<div class="daily-item"><span class="daily-code">${escHtml(code)}</span><span>¥${item.price.toFixed(4)}</span><span>${item.date}</span><button class="btn btn-xs btn-ghost" onclick="deleteDailyPriceEntry('${code}','${item.date}')">✕</button></div>`;
+                        html += `<div class="daily-list-item">
+                            <span class="dl-code">${escHtml(code)}</span>
+                            <span class="dl-price">¥${item.price.toFixed(4)}</span>
+                            <span class="dl-date">${item.date}</span>
+                            <button class="btn btn-xs btn-ghost" onclick="deleteDailyPriceEntry('${code}','${item.date}')">✕</button>
+                        </div>`;
                     });
                 });
-                container.innerHTML = html;
+                container.innerHTML = html || '<div class="daily-list-empty">暂无记录</div>';
             }
             function getAllDailyPrices(code) { const db = getDailyDB(); return db[code] || []; }
             function addDailyPrice() {
@@ -683,7 +765,6 @@
                 if (confirm(`确定删除 ${code} 在 ${dateStr} 的单价？`)) { deleteDailyPrice(code, dateStr); showToast('已删除','info'); renderDailyList(); }
             }
 
-            // ---------- 记录列表 ----------
             function renderRecordsList() {
                 const kw=document.getElementById('searchInput').value;
                 const records=dbSearch(kw);
@@ -761,7 +842,6 @@
             }
             function deleteRecord(id) { if(confirm('确定删除该记录吗？')) { if(dbDelete(id)) { if(document.getElementById('editingIdCalc').value===id) resetCalculator(); showToast('已删除','info'); refreshAll(); } } }
 
-            // ---------- 概览（板块占比+基金占比列表） ----------
             function renderOverview() {
                 const records = getDB();
                 const totalAmount = records.reduce((s,r)=>s+(r.totalAmount||0),0);
@@ -769,7 +849,6 @@
                 document.getElementById('statTotalAmount').textContent = '¥' + totalAmount.toFixed(2);
                 document.getElementById('statFundCount').textContent = fundCount;
 
-                // 板块占比
                 const sectorMap = new Map();
                 records.forEach(r => {
                     const sector = r.sector || '未分类';
@@ -792,7 +871,6 @@
                     });
                 }
 
-                // 基金占比
                 const fundMap = new Map();
                 records.forEach(r => {
                     const key = r.name || r.code || '未命名';
@@ -842,7 +920,7 @@
             window.handleFileSelect=handleFileSelect; window.clearAllData=clearAllData;
             window.addDailyPrice=addDailyPrice; window.deleteDailyPriceEntry=deleteDailyPriceEntry; window.renderDailyList=renderDailyList;
 
-            renderCalcRows(2); autoCalc();
+            renderCalcRows(1); autoCalc();
             renderInputRows(1); calcInputTotal();
             renderRecordsList();
             updateBadgeDot();
