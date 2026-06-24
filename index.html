@@ -1,1114 +1,1523 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes" />
-    <title>多笔持仓 · 基金份额计算器</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>基金持仓成本计算器</title>
     <style>
-        /* ---------- 全局重置 & 基础 ---------- */
+        :root {
+            --bg: #f0f4f8;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff;
+            --danger: #ef4444;
+            --danger-hover: #dc2626;
+            --danger-light: #fef2f2;
+            --success: #10b981;
+            --success-light: #ecfdf5;
+            --warning: #f59e0b;
+            --warning-light: #fffbeb;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --border-focus: #93c5fd;
+            --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07), 0 2px 4px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.08), 0 4px 10px rgba(0, 0, 0, 0.05);
+            --radius-sm: 6px;
+            --radius: 10px;
+            --radius-lg: 14px;
+            --radius-xl: 18px;
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', 'Menlo', monospace;
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background: #f2f7ff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
             min-height: 100vh;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* Header */
+        .header {
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.92);
+        }
+        .header-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: -0.3px;
+        }
+        .logo-icon {
+            width: 38px;
+            height: 38px;
+            background: var(--primary);
+            border-radius: var(--radius-sm);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            padding: 12px;
-            margin: 0;
+            color: #fff;
+            font-size: 1.3rem;
         }
-
-        /* ---------- 主容器 ---------- */
-        .container {
-            max-width: 480px;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            border-radius: 32px;
-            padding: 20px 16px 20px;
-            box-shadow: 0 20px 40px -12px rgba(0, 20, 40, 0.20);
-            border: 1px solid rgba(255, 255, 255, 0.6);
-            transition: all 0.2s ease;
-        }
-
-        /* ---------- 头部 ---------- */
-        .header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .header-icon {
-            font-size: 28px;
-            line-height: 1;
-        }
-
-        .header-text h1 {
-            font-size: 22px;
-            font-weight: 700;
-            color: #0b1e3a;
-            letter-spacing: -0.3px;
-            line-height: 1.2;
-        }
-
-        .header-text p {
-            font-size: 14px;
-            color: #4a5b7c;
-            font-weight: 400;
-            margin-top: 2px;
+        .header-badge {
+            font-size: 0.75rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
             letter-spacing: 0.2px;
         }
 
-        /* ---------- 卡片网格 ---------- */
-        .cards-grid {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            margin-bottom: 20px;
+        /* Main Layout */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px 24px 40px;
+            display: grid;
+            grid-template-columns: 1fr 420px;
+            gap: 24px;
+            align-items: start;
         }
 
-        /* ---------- 卡片 ---------- */
+        /* Card */
         .card {
-            background: #ffffff;
-            border-radius: 24px;
-            padding: 18px 16px 20px;
-            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            transition: box-shadow 0.2s ease;
-            display: flex;
-            flex-direction: column;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            overflow: hidden;
+            transition: var(--transition);
         }
-
-        .card-title {
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: #fafbfc;
+        }
+        .card-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            letter-spacing: -0.2px;
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 16px;
+        }
+        .card-header h2 .icon-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .icon-dot.blue {
+            background: var(--primary);
+        }
+        .icon-dot.green {
+            background: var(--success);
+        }
+        .card-body {
+            padding: 20px 22px;
+        }
+        .card-body.no-padding {
+            padding: 0;
+        }
+
+        /* Form Elements */
+        .section-label {
+            font-size: 0.8rem;
             font-weight: 600;
-            color: #0b1e3a;
-            margin-bottom: 14px;
-            flex-wrap: wrap;
-        }
-
-        .card-title .badge {
-            font-size: 12px;
-            font-weight: 500;
-            background: #eef3fc;
-            color: #1f4b8a;
-            padding: 0 10px;
-            border-radius: 20px;
-            line-height: 22px;
-            margin-left: auto;
-        }
-
-        .card-history .card-title .badge {
-            background: #ede7f6;
-            color: #5e3a8a;
-        }
-
-        .card-buy .card-title .badge {
-            background: #dcfce7;
-            color: #166b3b;
-        }
-
-        /* ---------- 历史记录区域 ---------- */
-        #historyContainer {
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            margin-bottom: 12px;
-            max-height: 340px;
-            overflow-y: auto;
-            padding-right: 2px;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-label .badge-count {
+            font-size: 0.7rem;
+            background: var(--primary-light);
+            color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-weight: 600;
         }
 
         .entry-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr auto auto;
-            gap: 8px;
-            align-items: center;
-            background: #f8fbff;
-            border-radius: 16px;
-            padding: 10px 12px 10px 12px;
-            border: 1.5px solid #e8eff8;
-            transition: border-color 0.2s ease;
-        }
-
-        .entry-row:hover {
-            border-color: #cad6e8;
-        }
-
-        .entry-row .input-group {
-            margin-bottom: 0;
-        }
-
-        .entry-row .input-group label {
-            font-size: 11px;
-            font-weight: 500;
-            color: #4a5b7c;
-            margin-bottom: 2px;
-            display: block;
-        }
-
-        .entry-row .input-row {
-            background: #ffffff;
-            border-radius: 10px;
-            border: 1px solid #d9e2ef;
-            overflow: hidden;
-            height: 34px;
-        }
-
-        .entry-row .input-row:focus-within {
-            border-color: #3b7cff;
-            box-shadow: 0 0 0 3px rgba(59, 124, 255, 0.10);
-        }
-
-        .entry-row .input-row .prefix {
-            padding: 0 4px 0 8px;
-            font-size: 13px;
-            line-height: 34px;
-            color: #6b7f9e;
-        }
-
-        .entry-row .input-row input {
-            padding: 0 6px 0 0;
-            font-size: 14px;
-            font-weight: 500;
-            line-height: 34px;
-            height: 34px;
-            width: 100%;
-            min-width: 0;
-        }
-
-        /* 份额迷你显示 */
-        .mini-shares {
-            background: #eef3fc;
-            border-radius: 10px;
-            padding: 2px 6px;
-            text-align: center;
-            min-width: 60px;
-            height: 34px;
             display: flex;
-            flex-direction: column;
-            justify-content: center;
+            gap: 10px;
             align-items: center;
-            border: 1px solid #d9e2ef;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            padding: 12px 14px;
+            border-radius: var(--radius);
+            border: 1px solid transparent;
+            transition: var(--transition);
+            position: relative;
         }
-
-        .mini-shares .label-sm {
-            font-size: 9px;
-            color: #6b7f9e;
-            font-weight: 500;
+        .entry-row:hover {
+            border-color: #dde4ef;
+            background: #f9fafb;
+        }
+        .entry-row .row-index {
+            font-weight: 700;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            min-width: 22px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .entry-row input {
+            flex: 1;
+            min-width: 100px;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            transition: var(--transition);
+            background: #fff;
+            color: var(--text);
+            font-family: var(--font-mono);
+        }
+        .entry-row input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+        }
+        .entry-row input.input-amount {
+            flex: 1.2;
+        }
+        .entry-row input.input-price {
+            flex: 1;
+        }
+        .entry-row .shares-display {
+            flex: 0.9;
+            min-width: 90px;
+            text-align: right;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+            padding: 10px 8px;
+            background: var(--primary-light);
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            letter-spacing: -0.2px;
+        }
+        .entry-row .shares-display.empty {
+            color: var(--text-muted);
+            background: #f1f5f9;
+            font-weight: 400;
+        }
+        .btn-remove-row {
+            flex-shrink: 0;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 1.5px solid #fecaca;
+            background: #fff;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             line-height: 1;
         }
-
-        .mini-shares .value-sm {
-            font-size: 13px;
-            font-weight: 600;
-            color: #0b1e3a;
-            line-height: 1.2;
+        .btn-remove-row:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
+        }
+        .btn-remove-row:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #e5e7eb;
+            color: #cbd5e1;
         }
 
-        .remove-row {
-            background: none;
-            border: none;
-            color: #a0b4d0;
-            font-size: 18px;
-            cursor: pointer;
-            padding: 0 4px;
-            height: 34px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: color 0.15s ease, transform 0.1s ease;
-            border-radius: 8px;
-            background: transparent;
-            width: 30px;
-            font-weight: 300;
-        }
-
-        .remove-row:hover {
-            color: #d14c4c;
-            background: #fef0f0;
-        }
-
-        .remove-row:active {
-            transform: scale(0.9);
-        }
-
-        /* 添加按钮 */
-        .add-row-btn {
-            background: #f0f5fe;
-            border: 1.5px dashed #bccde2;
-            border-radius: 30px;
-            padding: 8px 16px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #2f4b7a;
-            cursor: pointer;
-            transition: all 0.2s ease;
+        /* Buttons */
+        .btn {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            width: fit-content;
-            font-family: inherit;
-            margin-top: 2px;
-        }
-
-        .add-row-btn:hover {
-            background: #e6efff;
-            border-color: #8aa9d4;
-            color: #0b1e3a;
-        }
-
-        .add-row-btn:active {
-            transform: scale(0.96);
-        }
-
-        /* 历史汇总 */
-        .history-total {
-            margin-top: 14px;
-            background: #f0f5fe;
-            border-radius: 14px;
-            padding: 10px 14px;
-            border: 1px solid #e2eaf5;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
+            padding: 10px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.88rem;
             font-weight: 500;
-            color: #1e314a;
-        }
-
-        .history-total .ht-item {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-        }
-
-        .history-total .ht-item .num {
-            font-weight: 700;
-            color: #0b1e3a;
-            font-size: 15px;
-        }
-
-        .history-total .ht-item .num .u {
-            font-weight: 400;
-            color: #6b7f9e;
-            font-size: 12px;
-        }
-
-        /* ---------- 新增购入（右侧卡片） ---------- */
-        .card-buy .input-group {
-            margin-bottom: 12px;
-        }
-
-        .card-buy .input-group:last-of-type {
-            margin-bottom: 0;
-        }
-
-        .card-buy .share-display {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: #f0f5fe;
-            border-radius: 14px;
-            padding: 10px 14px;
-            margin-top: 12px;
-            border: 1px solid #e2eaf5;
-        }
-
-        .card-buy .share-display .label {
-            font-size: 13px;
-            font-weight: 500;
-            color: #3a4e6e;
-        }
-
-        .card-buy .share-display .value {
-            font-size: 17px;
-            font-weight: 600;
-            color: #0b1e3a;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .card-buy .share-display .value .unit {
-            font-size: 13px;
-            font-weight: 400;
-            color: #6b7f9e;
-            margin-left: 4px;
-        }
-
-        /* ---------- 结果区域 ---------- */
-        .result-section {
-            background: linear-gradient(135deg, #ffffff 0%, #f8fbff 100%);
-            border-radius: 24px;
-            padding: 18px 16px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.8);
-            box-shadow: 0 4px 12px rgba(0, 20, 40, 0.05);
-            margin-top: 4px;
-        }
-
-        .result-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 16px;
-        }
-
-        .result-item {
-            background: #ffffff;
-            border-radius: 16px;
-            padding: 12px 8px;
-            box-shadow: 0 2px 6px rgba(0, 20, 40, 0.04);
-            border: 1px solid #edf3fa;
-            text-align: center;
-        }
-
-        .result-item .r-label {
-            font-size: 11px;
-            font-weight: 500;
-            color: #6b7f9e;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            display: block;
-            margin-bottom: 2px;
-        }
-
-        .result-item .r-value {
-            font-size: 19px;
-            font-weight: 700;
-            color: #0b1e3a;
-            font-variant-numeric: tabular-nums;
-        }
-
-        .result-item .r-value .r-unit {
-            font-size: 13px;
-            font-weight: 400;
-            color: #6b7f9e;
-            margin-left: 2px;
-        }
-
-        .result-item.highlight .r-value {
-            color: #1a5cff;
-        }
-
-        .result-item .r-sub {
-            font-size: 12px;
-            color: #4a5b7c;
-            margin-top: 2px;
-            font-weight: 400;
-        }
-
-        /* ---------- 成本变化标签 ---------- */
-        .cost-change {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 13px;
-            font-weight: 500;
-            padding: 6px 12px;
-            border-radius: 30px;
-            background: #eff6ff;
-            color: #1a4b8a;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
-        }
-
-        .cost-change .arrow {
-            font-size: 15px;
-        }
-
-        .cost-change.up {
-            background: #fee9e7;
-            color: #b33a34;
-        }
-
-        .cost-change.down {
-            background: #e1f7e8;
-            color: #0f6e3a;
-        }
-
-        .cost-change.neutral {
-            background: #f0f0f0;
-            color: #5a5a5a;
-        }
-
-        /* ---------- 计算过程 ---------- */
-        .process-box {
-            background: #f7faff;
-            border-radius: 16px;
-            padding: 14px 14px;
-            border: 1px solid #e2eaf5;
-            margin-top: 4px;
-        }
-
-        .process-box .p-title {
-            font-size: 12px;
-            font-weight: 600;
-            color: #3a4e6e;
-            margin-bottom: 6px;
-            letter-spacing: 0.3px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .process-box .p-step {
-            font-size: 13px;
-            color: #1e314a;
-            line-height: 1.6;
-            font-family: "SF Mono", "Menlo", "Consolas", monospace;
-            font-variant-numeric: tabular-nums;
-            padding: 2px 0;
-            border-bottom: 1px dashed #e8eff8;
-            word-break: break-word;
-        }
-
-        .process-box .p-step:last-child {
-            border-bottom: none;
-        }
-
-        .process-box .p-step .hl {
-            font-weight: 600;
-            color: #0b1e3a;
-        }
-
-        .process-box .p-step .dim {
-            color: #6b7f9e;
-            font-weight: 400;
-        }
-
-        /* ---------- 底部操作栏 ---------- */
-        .actions {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 18px;
-            gap: 10px;
-        }
-
-        .btn-reset {
-            background: #ffffff;
-            border: 1.5px solid #d9e2ef;
-            border-radius: 30px;
-            padding: 10px 22px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #3a4e6e;
             cursor: pointer;
-            transition: all 0.2s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
+            border: 1.5px solid transparent;
+            transition: var(--transition);
+            letter-spacing: -0.1px;
+            white-space: nowrap;
             font-family: inherit;
         }
-
-        .btn-reset:hover {
-            background: #f0f5ff;
-            border-color: #b0c8e8;
-            color: #0b1e3a;
+        .btn:active {
             transform: scale(0.97);
         }
-
-        .btn-reset:active {
-            transform: scale(0.94);
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
         }
-
-        .tip {
-            font-size: 12px;
-            color: #6b7f9e;
-            display: flex;
-            align-items: center;
-            gap: 4px;
+        .btn-primary:hover {
+            background: var(--primary-hover);
+            border-color: var(--primary-hover);
+            box-shadow: var(--shadow-md);
         }
-
-        .tip span {
-            font-size: 15px;
+        .btn-outline {
+            background: #fff;
+            color: var(--primary);
+            border-color: #c7d2fe;
         }
-
-        /* ---------- 辅助类 ---------- */
-        .text-muted {
-            color: #6b7f9e;
+        .btn-outline:hover {
+            background: var(--primary-light);
+            border-color: var(--primary);
         }
-
-        /* ---------- 滚动条美化 ---------- */
-        ::-webkit-scrollbar {
-            width: 3px;
-            height: 3px;
+        .btn-danger {
+            background: #fff;
+            color: var(--danger);
+            border-color: #fecaca;
         }
-
-        ::-webkit-scrollbar-track {
-            background: #eef3fa;
-            border-radius: 8px;
+        .btn-danger:hover {
+            background: var(--danger-light);
+            border-color: var(--danger);
         }
-
-        ::-webkit-scrollbar-thumb {
-            background: #c5d4e8;
-            border-radius: 8px;
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.78rem;
+            border-radius: 4px;
         }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #a9bcd8;
+        .btn-xs {
+            padding: 4px 9px;
+            font-size: 0.72rem;
+            border-radius: 4px;
+            gap: 3px;
         }
-
-        /* 针对Firefox */
-        input[type="number"] {
-            -moz-appearance: textfield;
-        }
-
-        /* ---------- 动画 ---------- */
-        @keyframes fadeSlideUp {
-            0% {
-                opacity: 0;
-                transform: translateY(8px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .result-section {
-            animation: fadeSlideUp 0.3s ease-out;
-        }
-
-        /* 输入框通用 */
-        .input-row {
-            display: flex;
-            align-items: center;
-            background: #f7faff;
-            border-radius: 12px;
-            border: 1.5px solid #e2eaf5;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-            overflow: hidden;
-        }
-
-        .input-row .prefix {
-            padding: 0 8px 0 12px;
-            font-size: 14px;
-            font-weight: 500;
-            color: #6b7f9e;
+        .btn-ghost {
             background: transparent;
-            user-select: none;
-            line-height: 40px;
+            border-color: transparent;
+            color: var(--text-secondary);
+        }
+        .btn-ghost:hover {
+            background: #f1f5f9;
+            color: var(--text);
         }
 
-        .input-row input[type="number"] {
+        /* Result Box */
+        .result-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #ecfdf5 100%);
+            border: 2px solid #bae6fd;
+            border-radius: var(--radius);
+            padding: 18px 20px;
+            margin-top: 16px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 14px;
+        }
+        .result-item {
+            text-align: center;
+        }
+        .result-item .result-label {
+            font-size: 0.72rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        .result-item .result-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text);
+            font-family: var(--font-mono);
+            letter-spacing: -0.5px;
+        }
+        .result-item .result-value.highlight {
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+        .result-item .result-value.success {
+            color: var(--success);
+        }
+
+        /* Save Section */
+        .save-section {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed var(--border);
+        }
+        .save-section input {
             flex: 1;
-            border: none;
-            background: transparent;
-            padding: 8px 12px 8px 0;
-            font-size: 16px;
-            font-weight: 500;
-            color: #0b1e3a;
+            min-width: 100px;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
+            transition: var(--transition);
+            background: #fff;
+        }
+        .save-section input:focus {
             outline: none;
+            border-color: var(--border-focus);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+        }
+        .save-section input::placeholder {
+            color: #cbd5e1;
+        }
+
+        /* Records Panel */
+        .records-panel {
+            position: sticky;
+            top: 90px;
+            max-height: calc(100vh - 120px);
+            display: flex;
+            flex-direction: column;
+        }
+        .records-list {
+            overflow-y: auto;
+            max-height: calc(100vh - 280px);
+            padding: 8px 16px 16px;
+            flex: 1;
+        }
+        .records-list::-webkit-scrollbar {
+            width: 5px;
+        }
+        .records-list::-webkit-scrollbar-track {
+            background: transparent;
+            border-radius: 10px;
+        }
+        .records-list::-webkit-scrollbar-thumb {
+            background: #d1d5db;
+            border-radius: 10px;
+        }
+        .search-box {
+            margin: 12px 16px 8px;
+            position: relative;
+        }
+        .search-box input {
             width: 100%;
-            min-width: 0;
-            font-family: inherit;
+            padding: 10px 14px 10px 36px;
+            border: 1.5px solid var(--border);
+            border-radius: 25px;
+            font-size: 0.85rem;
+            transition: var(--transition);
+            background: #f8fafc;
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--border-focus);
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+        }
+        .search-box .search-icon {
+            position: absolute;
+            left: 13px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        .record-count {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 4px 16px 0;
+            letter-spacing: 0.3px;
         }
 
-        .input-row input[type="number"]::placeholder {
-            color: #b0c2da;
-            font-weight: 400;
-            font-size: 14px;
+        /* Record Card */
+        .record-card {
+            background: #fafbfc;
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: default;
+            transition: var(--transition);
+            position: relative;
+        }
+        .record-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: var(--shadow-sm);
+        }
+        .record-card.editing-highlight {
+            border-color: var(--primary);
+            background: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.06);
+        }
+        .record-card .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .record-card .record-title {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text);
+            letter-spacing: -0.2px;
+            word-break: break-all;
+        }
+        .record-card .record-code {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            letter-spacing: 0.3px;
+        }
+        .record-card .record-meta {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+        .record-card .record-meta span {
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .record-card .record-meta .meta-value {
+            font-weight: 600;
+            color: var(--text);
+            font-family: var(--font-mono);
+            font-size: 0.78rem;
+        }
+        .record-card .record-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .record-card .record-time {
+            font-size: 0.68rem;
+            color: var(--text-muted);
+            margin-top: 6px;
         }
 
-        .input-group {
-            margin-bottom: 12px;
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
         }
-
-        .input-group label {
-            display: block;
-            font-size: 13px;
+        .toast {
+            padding: 12px 18px;
+            border-radius: var(--radius-sm);
+            font-size: 0.85rem;
             font-weight: 500;
-            color: #3a4e6e;
-            margin-bottom: 4px;
-            letter-spacing: 0.2px;
+            color: #fff;
+            box-shadow: var(--shadow-lg);
+            animation: slideInRight 0.3s ease-out, fadeOut 0.3s ease-in forwards;
+            animation-delay: 0s, 2.2s;
+            max-width: 380px;
+            letter-spacing: -0.1px;
+        }
+        .toast.success {
+            background: #059669;
+        }
+        .toast.error {
+            background: #dc2626;
+        }
+        .toast.info {
+            background: #2563eb;
+        }
+        @keyframes slideInRight {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
         }
 
-        /* 小屏优化：历史行改为上下结构 (grid改为两列+自动换行) */
-        @media (max-width: 420px) {
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            opacity: 0.6;
+        }
+        .empty-state p {
+            font-size: 0.85rem;
+            letter-spacing: -0.1px;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 16px;
+            }
+            .records-panel {
+                position: static;
+                max-height: none;
+            }
+            .records-list {
+                max-height: 400px;
+            }
+            .result-box {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 600px) {
             .entry-row {
-                grid-template-columns: 1fr 1fr;
-                gap: 6px 10px;
-                padding: 10px 10px;
+                flex-direction: column;
+                gap: 8px;
+                padding: 10px;
             }
-            .entry-row .input-group:nth-child(1) {
-                grid-column: 1 / 2;
-            }
-            .entry-row .input-group:nth-child(2) {
-                grid-column: 2 / 3;
-            }
-            .mini-shares {
-                grid-column: 1 / 2;
-                height: 32px;
+            .entry-row input,
+            .entry-row .shares-display {
+                width: 100%;
                 min-width: auto;
+                text-align: left;
             }
-            .remove-row {
-                grid-column: 2 / 3;
-                justify-self: end;
-                height: 32px;
-                width: 32px;
+            .entry-row .shares-display {
+                text-align: right;
             }
-            .entry-row .input-row {
-                height: 32px;
+            .btn-remove-row {
+                align-self: flex-end;
+                width: 28px;
+                height: 28px;
+                font-size: 0.85rem;
             }
-            .entry-row .input-row input {
-                line-height: 32px;
-                height: 32px;
-                font-size: 13px;
+            .save-section {
+                flex-direction: column;
             }
-            .entry-row .input-row .prefix {
-                line-height: 32px;
+            .save-section input {
+                width: 100%;
             }
-        }
-
-        /* 结果网格在小屏上两列 */
-        @media (max-width: 400px) {
-            .result-grid {
+            .result-box {
                 grid-template-columns: 1fr 1fr;
                 gap: 8px;
+                padding: 12px 14px;
             }
-            .result-grid .result-item:last-child {
-                grid-column: span 2;
+            .result-item .result-value {
+                font-size: 1.1rem;
             }
-            .result-item .r-value {
-                font-size: 17px;
+            .result-item .result-value.highlight {
+                font-size: 1.25rem;
+            }
+            .header-inner {
+                flex-direction: column;
+                align-items: flex-start;
             }
         }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <!-- 头部 -->
-        <div class="header">
-            <div class="header-icon">📊</div>
-            <div class="header-text">
-                <h1>多笔持仓 · 成本计算器</h1>
-                <p>支持多笔历史买入，计算加仓后的加权平均成本</p>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-inner">
+            <div class="logo">
+                <div class="logo-icon">📊</div>
+                基金持仓成本计算器
             </div>
+            <span class="header-badge">💾 数据保存在本地浏览器</span>
         </div>
+    </div>
 
-        <!-- 输入卡片 -->
-        <div class="cards-grid">
-            <!-- 历史持仓 (多笔) -->
-            <div class="card card-history">
-                <div class="card-title">
-                    📂 历史持仓
-                    <span class="badge">多笔</span>
-                </div>
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
 
-                <div id="historyContainer">
-                    <!-- 由 JavaScript 动态渲染 -->
-                </div>
-
-                <button class="add-row-btn" id="addHistoryBtn">＋ 添加一笔历史</button>
-
-                <div class="history-total">
-                    <span class="ht-item">📌 总投入 <span class="num" id="histTotalAmount">¥0.00</span></span>
-                    <span class="ht-item">📦 总份额 <span class="num" id="histTotalShares">0.0000 <span class="u">份</span></span></span>
-                </div>
+    <!-- Main Content -->
+    <div class="main-container">
+        <!-- Left: Calculator -->
+        <div class="card" id="calculatorCard">
+            <div class="card-header">
+                <h2><span class="icon-dot blue"></span>持仓计算器</h2>
+                <button class="btn btn-ghost btn-sm" onclick="resetCalculator()" title="清空计算器">
+                    🔄 清空
+                </button>
             </div>
-
-            <!-- 新增购入 -->
-            <div class="card card-buy">
-                <div class="card-title">
-                    💰 新增购入
-                    <span class="badge">预期加仓</span>
+            <div class="card-body">
+                <!-- 原有持仓 -->
+                <div class="section-label">
+                    📋 原有持仓 <span class="badge-count" id="entryCount">2笔</span>
                 </div>
-                <div class="input-group">
-                    <label>投入金额（元）</label>
-                    <div class="input-row">
-                        <span class="prefix">¥</span>
-                        <input type="number" id="newAmount" placeholder="0.00" step="0.01" min="0" value="5000" />
+                <div id="originalEntries">
+                    <!-- Dynamic rows -->
+                </div>
+                <button class="btn btn-outline btn-sm" onclick="addEntryRow()" style="margin-bottom: 16px;">
+                    ➕ 添加一笔持仓
+                </button>
+
+                <!-- 预期购入 -->
+                <div class="section-label" style="margin-top: 8px;">🎯 预期购入</div>
+                <div class="entry-row" style="background: #fffbeb; border-color: #fde68a;">
+                    <span class="row-index">新</span>
+                    <input type="number" id="newAmount" class="input-amount" placeholder="预期购入金额（元）"
+                    step="0.01" min="0" oninput="autoCalculate()">
+                    <input type="number" id="newPrice" class="input-price" placeholder="预期购入单价（元）"
+                    step="0.0001" min="0.0001" oninput="autoCalculate()">
+                    <span class="shares-display empty" id="newShares">— 份</span>
+                </div>
+
+                <!-- Result -->
+                <div class="result-box" id="resultBox">
+                    <div class="result-item">
+                        <div class="result-label">📦 原有总金额</div>
+                        <div class="result-value" id="totalOrigAmount">¥0.00</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">📐 原有总份额</div>
+                        <div class="result-value" id="totalOrigShares">0.0000 份</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">💰 总金额（含预期）</div>
+                        <div class="result-value success" id="grandTotalAmount">¥0.00</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">📐 总份额（含预期）</div>
+                        <div class="result-value success" id="grandTotalShares">0.0000 份</div>
+                    </div>
+                    <div class="result-item" style="grid-column: 1 / -1;">
+                        <div class="result-label">⭐ 最终持仓单价</div>
+                        <div class="result-value highlight" id="finalPrice">—</div>
                     </div>
                 </div>
-                <div class="input-group">
-                    <label>基金单价（元）</label>
-                    <div class="input-row">
-                        <span class="prefix">¥</span>
-                        <input type="number" id="newPrice" placeholder="0.0000" step="0.0001" min="0.0001" value="1.2000" />
-                    </div>
+
+                <!-- Save Section -->
+                <div class="save-section">
+                    <input type="text" id="fundCode" placeholder="基金代码（可选）" maxlength="20"
+                    style="max-width: 150px;">
+                    <input type="text" id="fundName" placeholder="基金名称（可选）" maxlength="50"
+                    style="max-width: 200px;">
+                    <button class="btn btn-primary" id="btnSave" onclick="saveRecord()">
+                        💾 保存记录
+                    </button>
+                    <button class="btn btn-outline btn-sm" id="btnCancelEdit" onclick="cancelEdit()"
+                    style="display: none;">
+                        ✕ 取消编辑
+                    </button>
                 </div>
-                <div class="share-display">
-                    <span class="label">📦 购入份额</span>
-                    <span class="value" id="newShares">0.0000 <span class="unit">份</span></span>
-                </div>
+                <input type="hidden" id="editingId" value="">
             </div>
         </div>
 
-        <!-- 结果区域 -->
-        <div class="result-section" id="resultSection">
-            <!-- 成本变化标签 -->
-            <div id="costChangeBadge" class="cost-change neutral">
-                <span class="arrow">—</span> 等待输入
+        <!-- Right: Records Panel -->
+        <div class="card records-panel" id="recordsPanel">
+            <div class="card-header">
+                <h2><span class="icon-dot green"></span>已保存的记录</h2>
+                <button class="btn btn-ghost btn-xs" onclick="exportAllRecords()" title="导出JSON备份">
+                    📥 导出
+                </button>
             </div>
-
-            <!-- 核心结果 -->
-            <div class="result-grid">
-                <div class="result-item">
-                    <span class="r-label">💰 总投入</span>
-                    <span class="r-value" id="totalAmount">¥0.00</span>
-                </div>
-                <div class="result-item">
-                    <span class="r-label">📦 总份额</span>
-                    <span class="r-value" id="totalShares">0.0000 <span class="r-unit">份</span></span>
-                </div>
-                <div class="result-item highlight">
-                    <span class="r-label">🎯 最终单价</span>
-                    <span class="r-value" id="avgPrice">—</span>
-                    <span class="r-sub" id="avgPriceSub">加权平均成本</span>
-                </div>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="搜索基金代码或名称..." oninput="renderRecords()">
             </div>
-
-            <!-- 计算过程 -->
-            <div class="process-box" id="processBox">
-                <div class="p-title">📝 计算过程</div>
-                <div id="processSteps">
-                    <div class="p-step dim">添加历史记录并输入金额与单价</div>
+            <div class="record-count" id="recordCount">共 0 条记录</div>
+            <div class="records-list" id="recordsList">
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>暂无保存的记录</p>
+                    <p style="font-size:0.75rem;">计算完成后点击"保存记录"</p>
                 </div>
-            </div>
-        </div>
-
-        <!-- 底部操作 -->
-        <div class="actions">
-            <button class="btn-reset" id="resetBtn">↻ 重置全部</button>
-            <div class="tip">
-                <span>💡</span> 修改任意数值自动更新结果
             </div>
         </div>
     </div>
 
     <script>
         (function() {
-            'use strict';
+            // ==================== 数据库层 (localStorage) ====================
+            const STORAGE_KEY = 'fund_calculator_records';
+            const DB_VERSION_KEY = 'fund_calculator_version';
+            const CURRENT_DB_VERSION = 2;
 
-            // ---------- DOM 引用 ----------
-            const historyContainer = document.getElementById('historyContainer');
-            const addHistoryBtn = document.getElementById('addHistoryBtn');
-            const newAmount = document.getElementById('newAmount');
-            const newPrice = document.getElementById('newPrice');
+            // 数据结构
+            // {
+            //   id: string (timestamp + random),
+            //   code: string,
+            //   name: string,
+            //   originalEntries: [{amount: number, price: number, shares: number}],
+            //   newEntry: {amount: number, price: number, shares: number},
+            //   totalAmount: number,
+            //   totalShares: number,
+            //   finalPrice: number,
+            //   createdAt: ISO string,
+            //   updatedAt: ISO string
+            // }
 
-            const histTotalAmount = document.getElementById('histTotalAmount');
-            const histTotalShares = document.getElementById('histTotalShares');
-            const newSharesEl = document.getElementById('newShares');
-            const totalAmountEl = document.getElementById('totalAmount');
-            const totalSharesEl = document.getElementById('totalShares');
-            const avgPriceEl = document.getElementById('avgPrice');
-            const avgPriceSub = document.getElementById('avgPriceSub');
-            const costChangeBadge = document.getElementById('costChangeBadge');
-            const processSteps = document.getElementById('processSteps');
-
-            // ---------- 工具函数 ----------
-            function fmt(v, digits) {
-                if (v === undefined || v === null || !isFinite(v)) return '—';
-                return Number(v).toFixed(digits);
-            }
-
-            function fmtMoney(v) {
-                return '¥' + fmt(v, 2);
-            }
-
-            function fmtShares(v) {
-                return fmt(v, 4);
-            }
-
-            function fmtPrice(v) {
-                return fmt(v, 4);
-            }
-
-            // ---------- 模板：历史行 ----------
-            function createHistoryRow(amount = '', price = '') {
-                const div = document.createElement('div');
-                div.className = 'entry-row';
-                div.innerHTML = `
-                    <div class="input-group">
-                        <label>金额 (元)</label>
-                        <div class="input-row">
-                            <span class="prefix">¥</span>
-                            <input type="number" class="hist-amount" placeholder="0.00" step="0.01" min="0" value="${amount}" />
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <label>单价 (元)</label>
-                        <div class="input-row">
-                            <span class="prefix">¥</span>
-                            <input type="number" class="hist-price" placeholder="0.0000" step="0.0001" min="0.0001" value="${price}" />
-                        </div>
-                    </div>
-                    <div class="mini-shares">
-                        <span class="label-sm">份额</span>
-                        <span class="value-sm hist-shares">0.0000</span>
-                    </div>
-                    <button class="remove-row" type="button" title="移除这笔历史">✕</button>
-                `;
-                return div;
-            }
-
-            // ---------- 获取所有历史数据 ----------
-            function getHistoryData() {
-                const rows = historyContainer.querySelectorAll('.entry-row');
-                const data = [];
-                rows.forEach(row => {
-                    const amtInput = row.querySelector('.hist-amount');
-                    const priceInput = row.querySelector('.hist-price');
-                    const amt = parseFloat(amtInput.value) || 0;
-                    const price = parseFloat(priceInput.value) || 0;
-                    data.push({ amount: amt, price: price });
-                });
-                return data;
-            }
-
-            // ---------- 更新单行的份额显示 ----------
-            function updateRowShares(row) {
-                const amtInput = row.querySelector('.hist-amount');
-                const priceInput = row.querySelector('.hist-price');
-                const sharesSpan = row.querySelector('.hist-shares');
-                const amt = parseFloat(amtInput.value) || 0;
-                const price = parseFloat(priceInput.value) || 0;
-                const shares = (price > 0) ? amt / price : 0;
-                sharesSpan.textContent = fmtShares(shares);
-            }
-
-            // ---------- 更新所有行份额 ----------
-            function updateAllRowsShares() {
-                document.querySelectorAll('.entry-row').forEach(row => updateRowShares(row));
-            }
-
-            // ---------- 核心计算 ----------
-            function compute() {
-                // 1. 更新所有行份额（保证显示最新）
-                updateAllRowsShares();
-
-                // 2. 汇总历史
-                const history = getHistoryData();
-                let histTotalAmt = 0;
-                let histTotalShares = 0;
-                history.forEach(item => {
-                    histTotalAmt += item.amount;
-                    if (item.price > 0) {
-                        histTotalShares += item.amount / item.price;
-                    }
-                });
-
-                // 3. 新增买入
-                const newAmt = parseFloat(newAmount.value) || 0;
-                const newPrc = parseFloat(newPrice.value) || 0;
-                const newShares = (newPrc > 0) ? newAmt / newPrc : 0;
-
-                // 4. 总计
-                const totalAmt = histTotalAmt + newAmt;
-                const totalShares = histTotalShares + newShares;
-                const avgPrice = (totalShares > 0) ? totalAmt / totalShares : 0;
-
-                // ---------- 更新 UI ----------
-
-                // 历史汇总
-                histTotalAmount.textContent = fmtMoney(histTotalAmt);
-                histTotalShares.innerHTML = fmtShares(histTotalShares) + ' <span class="u">份</span>';
-
-                // 新增份额
-                newSharesEl.innerHTML = fmtShares(newShares) + ' <span class="unit">份</span>';
-
-                // 总体结果
-                totalAmountEl.textContent = fmtMoney(totalAmt);
-                totalSharesEl.innerHTML = fmtShares(totalShares) + ' <span class="r-unit">份</span>';
-
-                if (totalShares > 0 && avgPrice > 0) {
-                    avgPriceEl.textContent = '¥' + fmtPrice(avgPrice);
-                    avgPriceSub.textContent = '加权平均成本';
-                } else {
-                    avgPriceEl.textContent = '—';
-                    avgPriceSub.textContent = '请完善数据';
+            function getDB() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    if (!raw) return [];
+                    const data = JSON.parse(raw);
+                    if (!Array.isArray(data)) return [];
+                    return data;
+                } catch (e) {
+                    console.error('读取数据库失败:', e);
+                    return [];
                 }
+            }
 
-                // ---------- 成本变化标签 (对比历史平均 vs 最终平均) ----------
-                const histAvg = (histTotalShares > 0) ? histTotalAmt / histTotalShares : 0;
-                if (histTotalShares > 0 && avgPrice > 0 && histAvg > 0) {
-                    const diff = avgPrice - histAvg;
-                    const pct = (diff / histAvg) * 100;
-                    let emoji, cls, label;
-                    if (Math.abs(diff) < 0.0001) {
-                        emoji = '—';
-                        cls = 'neutral';
-                        label = '成本未变';
-                    } else if (diff < 0) {
-                        emoji = '↓';
-                        cls = 'down';
-                        label = `成本降低 ${Math.abs(pct).toFixed(2)}% (${fmtPrice(histAvg)} → ${fmtPrice(avgPrice)})`;
-                    } else {
-                        emoji = '↑';
-                        cls = 'up';
-                        label = `成本升高 ${pct.toFixed(2)}% (${fmtPrice(histAvg)} → ${fmtPrice(avgPrice)})`;
+            function saveDB(records) {
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+                    localStorage.setItem(DB_VERSION_KEY, CURRENT_DB_VERSION);
+                } catch (e) {
+                    console.error('保存数据库失败:', e);
+                    if (e.name === 'QuotaExceededError') {
+                        showToast('存储空间不足，请清理旧记录', 'error');
                     }
-                    costChangeBadge.className = 'cost-change ' + cls;
-                    costChangeBadge.innerHTML = `<span class="arrow">${emoji}</span> ${label}`;
-                } else if (histTotalShares === 0 && totalShares === 0) {
-                    costChangeBadge.className = 'cost-change neutral';
-                    costChangeBadge.innerHTML = '<span class="arrow">—</span> 请添加历史持仓或输入数据';
-                } else if (histTotalShares === 0 && totalShares > 0) {
-                    costChangeBadge.className = 'cost-change neutral';
-                    costChangeBadge.innerHTML = '<span class="arrow">📌</span> 仅有一笔买入，无历史对比';
-                } else {
-                    costChangeBadge.className = 'cost-change neutral';
-                    costChangeBadge.innerHTML = '<span class="arrow">—</span> 等待输入';
                 }
+            }
 
-                // ---------- 计算过程 ----------
-                let steps = [];
+            function generateId() {
+                return Date.now().toString(36) + '-' + Math.random().toString(36).substring(2, 9);
+            }
 
-                // 历史明细
-                if (history.length === 0) {
-                    steps.push(`<span class="dim">暂无历史记录，请添加。</span>`);
-                } else {
-                    steps.push(`📂 历史持仓共 <span class="hl">${history.length}</span> 笔，总投入 ${fmtMoney(histTotalAmt)}，总份额 ${fmtShares(histTotalShares)} 份`);
-                    history.forEach((item, idx) => {
-                        if (item.price > 0 && item.amount > 0) {
-                            const sh = item.amount / item.price;
-                            steps.push(`  #${idx+1}  ${fmtMoney(item.amount)} ÷ ${fmtPrice(item.price)} = ${fmtShares(sh)} 份`);
-                        } else {
-                            steps.push(`  #${idx+1}  <span class="dim">数据不完整 (金额或单价为0)</span>`);
+            // 数据库CRUD操作
+            function dbFindAll() {
+                return getDB().sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            function dbFindById(id) {
+                const records = getDB();
+                return records.find(r => r.id === id) || null;
+            }
+
+            function dbInsert(record) {
+                const records = getDB();
+                record.id = generateId();
+                record.createdAt = new Date().toISOString();
+                record.updatedAt = record.createdAt;
+                records.unshift(record);
+                saveDB(records);
+                return record;
+            }
+
+            function dbUpdate(id, updatedData) {
+                const records = getDB();
+                const index = records.findIndex(r => r.id === id);
+                if (index === -1) return null;
+                records[index] = {
+                    ...records[index],
+                    ...updatedData,
+                    id: records[index].id,
+                    createdAt: records[index].createdAt,
+                    updatedAt: new Date().toISOString()
+                };
+                saveDB(records);
+                return records[index];
+            }
+
+            function dbDelete(id) {
+                const records = getDB();
+                const filtered = records.filter(r => r.id !== id);
+                saveDB(filtered);
+                return filtered.length < records.length;
+            }
+
+            function dbSearch(keyword) {
+                if (!keyword || !keyword.trim()) return dbFindAll();
+                const kw = keyword.trim().toLowerCase();
+                const records = getDB();
+                return records.filter(r => {
+                    const codeMatch = r.code && r.code.toLowerCase().includes(kw);
+                    const nameMatch = r.name && r.name.toLowerCase().includes(kw);
+                    return codeMatch || nameMatch;
+                }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+            }
+
+            function dbExportJSON() {
+                const records = getDB();
+                return JSON.stringify(records, null, 2);
+            }
+
+            function dbImportJSON(jsonStr) {
+                try {
+                    const data = JSON.parse(jsonStr);
+                    if (!Array.isArray(data)) throw new Error('格式错误：需要数组');
+                    // 验证数据结构
+                    for (const item of data) {
+                        if (!item.originalEntries || !item.newEntry ||
+                            typeof item.totalAmount !== 'number' ||
+                            typeof item.totalShares !== 'number') {
+                            throw new Error('数据格式不兼容');
                         }
+                    }
+                    const existing = getDB();
+                    const existingIds = new Set(existing.map(r => r.id));
+                    let imported = 0;
+                    for (const item of data) {
+                        if (!item.id || !existingIds.has(item.id)) {
+                            if (!item.id) item.id = generateId();
+                            if (!item.createdAt) item.createdAt = new Date().toISOString();
+                            if (!item.updatedAt) item.updatedAt = item.createdAt;
+                            existing.unshift(item);
+                            existingIds.add(item.id);
+                            imported++;
+                        }
+                    }
+                    saveDB(existing);
+                    return imported;
+                } catch (e) {
+                    throw new Error('导入失败：' + e.message);
+                }
+            }
+
+            // ==================== 计算器逻辑 ====================
+            let entryRowCounter = 2; // 默认2行
+            const MAX_ENTRY_ROWS = 20;
+
+            function createEntryRow(index) {
+                const row = document.createElement('div');
+                row.className = 'entry-row';
+                row.setAttribute('data-entry-index', index);
+                row.innerHTML = `
+                    <span class="row-index">${index + 1}</span>
+                    <input type="number" class="input-amount" placeholder="金额（元）"
+                        step="0.01" min="0" oninput="autoCalculate()" data-type="amount" data-index="${index}">
+                    <input type="number" class="input-price" placeholder="单价（元）"
+                        step="0.0001" min="0.0001" oninput="autoCalculate()" data-type="price" data-index="${index}">
+                    <span class="shares-display empty" data-type="shares" data-index="${index}">— 份</span>
+                    <button class="btn-remove-row" onclick="removeEntryRow(this, ${index})"
+                        title="删除此笔" ${entryRowCounter <= 1 ? 'disabled' : ''}>✕</button>
+                `;
+                return row;
+            }
+
+            function renderEntryRows(count) {
+                const container = document.getElementById('originalEntries');
+                container.innerHTML = '';
+                for (let i = 0; i < count; i++) {
+                    container.appendChild(createEntryRow(i));
+                }
+                entryRowCounter = count;
+                updateEntryCountBadge();
+                updateRemoveButtons();
+            }
+
+            function addEntryRow() {
+                if (entryRowCounter >= MAX_ENTRY_ROWS) {
+                    showToast(`最多支持 ${MAX_ENTRY_ROWS} 笔原有持仓`, 'info');
+                    return;
+                }
+                const container = document.getElementById('originalEntries');
+                const newIndex = entryRowCounter;
+                container.appendChild(createEntryRow(newIndex));
+                entryRowCounter++;
+                updateEntryCountBadge();
+                updateRemoveButtons();
+                // 滚动到新行
+                const newRow = container.lastElementChild;
+                if (newRow) {
+                    newRow.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+
+            function removeEntryRow(btn, index) {
+                if (entryRowCounter <= 1) {
+                    showToast('至少保留一笔原有持仓', 'info');
+                    return;
+                }
+                const row = btn.closest('.entry-row');
+                if (row) {
+                    row.style.opacity = '0';
+                    row.style.transform = 'translateX(-20px)';
+                    row.style.transition = '0.25s ease';
+                    setTimeout(() => {
+                        row.remove();
+                        entryRowCounter--;
+                        reindexEntryRows();
+                        updateEntryCountBadge();
+                        updateRemoveButtons();
+                        autoCalculate();
+                    }, 200);
+                }
+            }
+
+            function reindexEntryRows() {
+                const container = document.getElementById('originalEntries');
+                const rows = container.querySelectorAll('.entry-row');
+                rows.forEach((row, i) => {
+                    row.setAttribute('data-entry-index', i);
+                    const indexSpan = row.querySelector('.row-index');
+                    if (indexSpan) indexSpan.textContent = i + 1;
+                    const inputs = row.querySelectorAll('input');
+                    inputs.forEach(inp => {
+                        inp.setAttribute('data-index', i);
+                    });
+                    const sharesSpan = row.querySelector('.shares-display');
+                    if (sharesSpan) sharesSpan.setAttribute('data-index', i);
+                    const removeBtn = row.querySelector('.btn-remove-row');
+                    if (removeBtn) {
+                        removeBtn.setAttribute('onclick', `removeEntryRow(this, ${i})`);
+                    }
+                });
+                entryRowCounter = rows.length;
+            }
+
+            function updateEntryCountBadge() {
+                const badge = document.getElementById('entryCount');
+                if (badge) badge.textContent = entryRowCounter + '笔';
+            }
+
+            function updateRemoveButtons() {
+                const container = document.getElementById('originalEntries');
+                const buttons = container.querySelectorAll('.btn-remove-row');
+                buttons.forEach(btn => {
+                    btn.disabled = entryRowCounter <= 1;
+                });
+            }
+
+            function getOriginalEntriesData() {
+                const container = document.getElementById('originalEntries');
+                const rows = container.querySelectorAll('.entry-row');
+                const entries = [];
+                rows.forEach(row => {
+                    const amountInput = row.querySelector('.input-amount');
+                    const priceInput = row.querySelector('.input-price');
+                    const amount = parseFloat(amountInput?.value) || 0;
+                    const price = parseFloat(priceInput?.value) || 0;
+                    const shares = (price > 0 && amount > 0) ? amount / price : 0;
+                    if (amount > 0 || price > 0) {
+                        entries.push({
+                            amount: amount,
+                            price: price,
+                            shares: shares
+                        });
+                    }
+                });
+                return entries;
+            }
+
+            function autoCalculate() {
+                const entries = getOriginalEntriesData();
+                let totalOrigAmount = 0;
+                let totalOrigShares = 0;
+
+                entries.forEach(entry => {
+                    if (entry.amount > 0 && entry.price > 0) {
+                        totalOrigAmount += entry.amount;
+                        totalOrigShares += entry.shares;
+                    }
+                });
+
+                // 更新每行的份额显示
+                const container = document.getElementById('originalEntries');
+                const rows = container.querySelectorAll('.entry-row');
+                rows.forEach(row => {
+                    const amountInput = row.querySelector('.input-amount');
+                    const priceInput = row.querySelector('.input-price');
+                    const sharesSpan = row.querySelector('.shares-display');
+                    const amount = parseFloat(amountInput?.value) || 0;
+                    const price = parseFloat(priceInput?.value) || 0;
+                    if (sharesSpan) {
+                        if (amount > 0 && price > 0) {
+                            const shares = amount / price;
+                            sharesSpan.textContent = shares.toFixed(4) + ' 份';
+                            sharesSpan.classList.remove('empty');
+                        } else {
+                            sharesSpan.textContent = '— 份';
+                            sharesSpan.classList.add('empty');
+                        }
+                    }
+                });
+
+                // 预期购入
+                const newAmount = parseFloat(document.getElementById('newAmount')?.value) || 0;
+                const newPrice = parseFloat(document.getElementById('newPrice')?.value) || 0;
+                const newShares = (newPrice > 0 && newAmount > 0) ? newAmount / newPrice : 0;
+                const newSharesSpan = document.getElementById('newShares');
+                if (newSharesSpan) {
+                    if (newAmount > 0 && newPrice > 0) {
+                        newSharesSpan.textContent = newShares.toFixed(4) + ' 份';
+                        newSharesSpan.classList.remove('empty');
+                    } else {
+                        newSharesSpan.textContent = '— 份';
+                        newSharesSpan.classList.add('empty');
+                    }
+                }
+
+                // 总计
+                const grandTotalAmount = totalOrigAmount + newAmount;
+                const grandTotalShares = totalOrigShares + newShares;
+                const finalPrice = grandTotalShares > 0 ? grandTotalAmount / grandTotalShares : 0;
+
+                document.getElementById('totalOrigAmount').textContent =
+                    '¥' + totalOrigAmount.toFixed(2);
+                document.getElementById('totalOrigShares').textContent =
+                    totalOrigShares.toFixed(4) + ' 份';
+                document.getElementById('grandTotalAmount').textContent =
+                    '¥' + grandTotalAmount.toFixed(2);
+                document.getElementById('grandTotalShares').textContent =
+                    grandTotalShares.toFixed(4) + ' 份';
+
+                const finalPriceEl = document.getElementById('finalPrice');
+                if (grandTotalShares > 0 && grandTotalAmount > 0) {
+                    finalPriceEl.textContent = '¥' + finalPrice.toFixed(4);
+                    finalPriceEl.style.color = '';
+                } else {
+                    finalPriceEl.textContent = '—';
+                    finalPriceEl.style.color = '#94a3b8';
+                }
+            }
+
+            function getCalculatorData() {
+                const entries = getOriginalEntriesData();
+                const newAmount = parseFloat(document.getElementById('newAmount')?.value) || 0;
+                const newPrice = parseFloat(document.getElementById('newPrice')?.value) || 0;
+                const newShares = (newPrice > 0 && newAmount > 0) ? newAmount / newPrice : 0;
+
+                let totalOrigAmount = 0;
+                let totalOrigShares = 0;
+                entries.forEach(e => {
+                    if (e.amount > 0 && e.price > 0) {
+                        totalOrigAmount += e.amount;
+                        totalOrigShares += e.shares;
+                    }
+                });
+
+                const grandTotalAmount = totalOrigAmount + newAmount;
+                const grandTotalShares = totalOrigShares + newShares;
+                const finalPrice = grandTotalShares > 0 ? grandTotalAmount / grandTotalShares : 0;
+
+                return {
+                    originalEntries: entries.filter(e => e.amount > 0 && e.price > 0),
+                    newEntry: {
+                        amount: newAmount,
+                        price: newPrice,
+                        shares: newShares
+                    },
+                    totalOrigAmount,
+                    totalOrigShares,
+                    grandTotalAmount,
+                    grandTotalShares,
+                    finalPrice
+                };
+            }
+
+            function populateCalculator(record) {
+                // 清空现有
+                const container = document.getElementById('originalEntries');
+                container.innerHTML = '';
+
+                const origEntries = record.originalEntries || [];
+                const count = Math.max(origEntries.length, 1);
+                entryRowCounter = count;
+
+                for (let i = 0; i < count; i++) {
+                    const row = createEntryRow(i);
+                    container.appendChild(row);
+                    if (origEntries[i]) {
+                        const amountInput = row.querySelector('.input-amount');
+                        const priceInput = row.querySelector('.input-price');
+                        if (amountInput) amountInput.value = origEntries[i].amount;
+                        if (priceInput) priceInput.value = origEntries[i].price;
+                    }
+                }
+
+                // 预期购入
+                if (record.newEntry) {
+                    document.getElementById('newAmount').value = record.newEntry.amount || '';
+                    document.getElementById('newPrice').value = record.newEntry.price || '';
+                }
+
+                // 基金代码和名称
+                document.getElementById('fundCode').value = record.code || '';
+                document.getElementById('fundName').value = record.name || '';
+
+                updateEntryCountBadge();
+                updateRemoveButtons();
+                autoCalculate();
+
+                // 滚动到计算器顶部
+                document.getElementById('calculatorCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function resetCalculator() {
+                document.getElementById('fundCode').value = '';
+                document.getElementById('fundName').value = '';
+                document.getElementById('newAmount').value = '';
+                document.getElementById('newPrice').value = '';
+                document.getElementById('editingId').value = '';
+                document.getElementById('btnSave').textContent = '💾 保存记录';
+                document.getElementById('btnSave').className = 'btn btn-primary';
+                document.getElementById('btnCancelEdit').style.display = 'none';
+                renderEntryRows(2);
+                autoCalculate();
+                // 移除编辑高亮
+                document.querySelectorAll('.record-card.editing-highlight').forEach(card => {
+                    card.classList.remove('editing-highlight');
+                });
+                document.getElementById('calculatorCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+
+            function cancelEdit() {
+                resetCalculator();
+                showToast('已取消编辑，计算器已清空', 'info');
+            }
+
+            // ==================== 保存与记录管理 ====================
+            function saveRecord() {
+                const data = getCalculatorData();
+                const validEntries = data.originalEntries;
+                const hasValidOrig = validEntries.length > 0;
+                const hasValidNew = data.newEntry.amount > 0 && data.newEntry.price > 0;
+
+                if (!hasValidOrig && !hasValidNew) {
+                    showToast('请至少输入一笔有效的持仓数据（金额和单价均大于0）', 'error');
+                    return;
+                }
+
+                const code = document.getElementById('fundCode')?.value?.trim() || '';
+                const name = document.getElementById('fundName')?.value?.trim() || '';
+                const editingId = document.getElementById('editingId')?.value || '';
+
+                const recordData = {
+                    code: code,
+                    name: name,
+                    originalEntries: data.originalEntries,
+                    newEntry: data.newEntry,
+                    totalAmount: data.grandTotalAmount,
+                    totalShares: data.grandTotalShares,
+                    finalPrice: data.finalPrice,
+                };
+
+                if (editingId) {
+                    // 更新
+                    const updated = dbUpdate(editingId, recordData);
+                    if (updated) {
+                        showToast('✅ 记录已更新！', 'success');
+                        resetCalculator();
+                        renderRecords();
+                    } else {
+                        showToast('更新失败，记录可能已被删除', 'error');
+                    }
+                } else {
+                    // 新增
+                    const saved = dbInsert(recordData);
+                    if (saved) {
+                        showToast('✅ 记录已保存！', 'success');
+                        // 不清空计算器，方便用户继续计算
+                        document.getElementById('fundCode').value = '';
+                        document.getElementById('fundName').value = '';
+                        renderRecords();
+                        // 滚动到记录列表
+                        document.getElementById('recordsPanel').scrollIntoView({ behavior: 'smooth',
+                            block: 'start' });
+                    }
+                }
+            }
+
+            function editRecord(id) {
+                const record = dbFindById(id);
+                if (!record) {
+                    showToast('记录不存在', 'error');
+                    return;
+                }
+                document.getElementById('editingId').value = id;
+                document.getElementById('btnSave').textContent = '✏️ 更新记录';
+                document.getElementById('btnSave').className = 'btn btn-primary';
+                document.getElementById('btnCancelEdit').style.display = 'inline-flex';
+                populateCalculator(record);
+
+                // 高亮对应记录卡片
+                document.querySelectorAll('.record-card.editing-highlight').forEach(card => {
+                    card.classList.remove('editing-highlight');
+                });
+                const targetCard = document.querySelector(`.record-card[data-record-id="${id}"]`);
+                if (targetCard) {
+                    targetCard.classList.add('editing-highlight');
+                    targetCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+                showToast('正在编辑记录，修改后请点击"更新记录"', 'info');
+            }
+
+            function deleteRecord(id) {
+                const record = dbFindById(id);
+                const identifier = record ?
+                    (record.name || record.code || '无名称') :
+                    '该记录';
+                if (confirm(`确定要删除「${identifier}」吗？\n\n此操作不可恢复。`)) {
+                    const success = dbDelete(id);
+                    if (success) {
+                        // 如果正在编辑这条记录，取消编辑
+                        const editingId = document.getElementById('editingId')?.value;
+                        if (editingId === id) {
+                            resetCalculator();
+                        }
+                        showToast('🗑️ 记录已删除', 'info');
+                        renderRecords();
+                    } else {
+                        showToast('删除失败', 'error');
+                    }
+                }
+            }
+
+            function renderRecords() {
+                const searchInput = document.getElementById('searchInput');
+                const keyword = searchInput?.value || '';
+                const records = dbSearch(keyword);
+                const listEl = document.getElementById('recordsList');
+                const countEl = document.getElementById('recordCount');
+
+                if (countEl) {
+                    countEl.textContent = `共 ${records.length} 条记录` + (keyword ? '（已筛选）' : '');
+                }
+
+                if (!listEl) return;
+
+                if (records.length === 0) {
+                    listEl.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>${keyword ? '没有匹配的记录' : '暂无保存的记录'}</p>
+                            <p style="font-size:0.75rem;">${keyword ? '尝试其他关键词' : '计算完成后点击"保存记录"'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                listEl.innerHTML = records.map(r => {
+                    const origCount = r.originalEntries?.length || 0;
+                    const hasNew = r.newEntry && r.newEntry.amount > 0 && r.newEntry.price > 0;
+                    const displayTitle = r.name || r.code || '未命名基金';
+                    const displaySub = r.code ? (r.name ? r.code : '') : '';
+                    const timeStr = r.updatedAt ?
+                        new Date(r.updatedAt).toLocaleString('zh-CN', {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        }) :
+                        '';
+
+                    return `
+                    <div class="record-card" data-record-id="${r.id}">
+                        <div class="record-header">
+                            <div>
+                                <div class="record-title">${escapeHtml(displayTitle)}</div>
+                                ${displaySub ? `<div class="record-code">${escapeHtml(displaySub)}</div>` : ''}
+                            </div>
+                        </div>
+                        <div class="record-meta">
+                            <span>📋 原有<span class="meta-value">${origCount}笔</span></span>
+                            ${hasNew ? '<span>🎯 含预期购入</span>' : '<span style="color:#94a3b8">无预期购入</span>'}
+                            <span>💰 总金额<span class="meta-value">¥${r.totalAmount.toFixed(2)}</span></span>
+                            <span>⭐ 最终单价<span class="meta-value">¥${r.finalPrice.toFixed(4)}</span></span>
+                        </div>
+                        <div class="record-time">🕒 ${timeStr || '未知时间'}</div>
+                        <div class="record-actions">
+                            <button class="btn btn-outline btn-xs" onclick="editRecord('${r.id}')">✏️ 编辑</button>
+                            <button class="btn btn-danger btn-xs" onclick="deleteRecord('${r.id}')">🗑️ 删除</button>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function exportAllRecords() {
+                const records = getDB();
+                if (records.length === 0) {
+                    showToast('没有可导出的记录', 'info');
+                    return;
+                }
+                const jsonStr = dbExportJSON();
+                const blob = new Blob([jsonStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const timestamp = new Date().toISOString().slice(0, 10);
+                a.download = `基金记录备份_${timestamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast(`📥 已导出 ${records.length} 条记录`, 'success');
+            }
+
+            // 在页面加载时尝试导入（通过拖拽JSON文件到记录面板）
+            function setupImport() {
+                const recordsPanel = document.getElementById('recordsPanel');
+                if (!recordsPanel) return;
+
+                recordsPanel.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '#2563eb';
+                    this.style.boxShadow = '0 0 0 4px rgba(37,99,235,0.1)';
+                });
+
+                recordsPanel.addEventListener('dragleave', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                });
+
+                recordsPanel.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.style.borderColor = '';
+                    this.style.boxShadow = '';
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        if (file.name.endsWith('.json')) {
+                            const reader = new FileReader();
+                            reader.onload = function(ev) {
+                                try {
+                                    const imported = dbImportJSON(ev.target.result);
+                                    showToast(`✅ 成功导入 ${imported} 条记录`, 'success');
+                                    renderRecords();
+                                } catch (err) {
+                                    showToast(err.message, 'error');
+                                }
+                            };
+                            reader.readAsText(file);
+                        } else {
+                            showToast('请拖入 .json 备份文件', 'error');
+                        }
+                    }
+                });
+            }
+
+            // ==================== Toast ====================
+            function showToast(message, type = 'info') {
+                const container = document.getElementById('toastContainer');
+                if (!container) return;
+                const toast = document.createElement('div');
+                toast.className = `toast ${type}`;
+                toast.textContent = message;
+                container.appendChild(toast);
+                // 自动移除
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 2600);
+            }
+
+            // ==================== 初始化 ====================
+            function init() {
+                renderEntryRows(2);
+                autoCalculate();
+                renderRecords();
+                setupImport();
+
+                // 全局暴露函数
+                window.addEntryRow = addEntryRow;
+                window.removeEntryRow = removeEntryRow;
+                window.autoCalculate = autoCalculate;
+                window.saveRecord = saveRecord;
+                window.editRecord = editRecord;
+                window.deleteRecord = deleteRecord;
+                window.resetCalculator = resetCalculator;
+                window.cancelEdit = cancelEdit;
+                window.renderRecords = renderRecords;
+                window.exportAllRecords = exportAllRecords;
+
+                // 监听搜索输入
+                const searchInput = document.getElementById('searchInput');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        renderRecords();
                     });
                 }
 
-                // 新增
-                if (newAmt > 0 && newPrc > 0) {
-                    steps.push(`➕ 新增买入 ${fmtMoney(newAmt)} ÷ ${fmtPrice(newPrc)} = <span class="hl">${fmtShares(newShares)}</span> 份`);
-                } else if (newAmt > 0 || newPrc > 0) {
-                    steps.push(`➕ 新增买入 <span class="dim">数据不完整 (金额或单价为0)</span>`);
-                } else {
-                    steps.push(`➕ 新增买入 <span class="dim">（未填写）</span>`);
-                }
-
-                // 最终汇总
-                if (totalShares > 0 && totalAmt > 0) {
-                    steps.push(`📊 总份额 = ${fmtShares(histTotalShares)} + ${fmtShares(newShares)} = <span class="hl">${fmtShares(totalShares)}</span> 份`);
-                    steps.push(`📊 总金额 = ${fmtMoney(histTotalAmt)} + ${fmtMoney(newAmt)} = <span class="hl">${fmtMoney(totalAmt)}</span>`);
-                    steps.push(`🎯 最终单价 = ${fmtMoney(totalAmt)} ÷ ${fmtShares(totalShares)} = <span class="hl">¥${fmtPrice(avgPrice)}</span>`);
-                } else if (totalShares === 0 && totalAmt === 0) {
-                    steps.push(`<span class="dim">暂无有效数据，请填写金额和单价</span>`);
-                } else if (totalShares === 0 && totalAmt > 0) {
-                    steps.push(`<span class="dim">⚠️ 总份额为零，无法计算单价（请检查单价是否大于0）</span>`);
-                }
-
-                processSteps.innerHTML = steps.map(s =>
-                    `<div class="p-step">${s}</div>`
-                ).join('');
-            }
-
-            // ---------- 重置 ----------
-            function resetAll() {
-                // 清空历史，保留两行示例
-                historyContainer.innerHTML = '';
-                // 添加两笔示例历史
-                const defaultHistory = [
-                    { amount: 5000, price: 1.5000 },
-                    { amount: 3000, price: 1.8000 }
-                ];
-                defaultHistory.forEach(item => {
-                    historyContainer.appendChild(createHistoryRow(item.amount, item.price));
-                });
-
-                // 重置新增
-                newAmount.value = '5000';
-                newPrice.value = '1.2000';
-
-                // 重新绑定事件（因为新行没有监听器）
-                bindHistoryEvents();
-                compute();
-                // 聚焦
-                newAmount.focus();
-            }
-
-            // ---------- 绑定历史事件 (委托) ----------
-            function bindHistoryEvents() {
-                // 使用事件委托，已在初始化时绑定，此处无需重复
-            }
-
-            // ---------- 添加历史行 ----------
-            function addHistoryRow(amount = '', price = '') {
-                const row = createHistoryRow(amount, price);
-                historyContainer.appendChild(row);
-                // 更新计算
-                compute();
-                // 滚动到新行
-                row.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-                // 聚焦到金额输入
-                const amtInput = row.querySelector('.hist-amount');
-                if (amtInput) amtInput.focus();
-            }
-
-            // ---------- 初始化 & 事件绑定 ----------
-            function init() {
-                // 填充默认历史 (两笔)
-                const defaultHistory = [
-                    { amount: 5000, price: 1.5000 },
-                    { amount: 3000, price: 1.8000 }
-                ];
-                defaultHistory.forEach(item => {
-                    historyContainer.appendChild(createHistoryRow(item.amount, item.price));
-                });
-
-                // 事件委托：监听历史容器内的 input 和 click
-                historyContainer.addEventListener('input', function(e) {
-                    const target = e.target;
-                    if (target.classList.contains('hist-amount') || target.classList.contains('hist-price')) {
-                        // 更新对应行的份额显示
-                        const row = target.closest('.entry-row');
-                        if (row) updateRowShares(row);
-                        compute();
+                // 键盘快捷键
+                document.addEventListener('keydown', function(e) {
+                    // Ctrl+S 保存
+                    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                        e.preventDefault();
+                        saveRecord();
+                    }
+                    // Ctrl+N 新建
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
+                        e.preventDefault();
+                        resetCalculator();
                     }
                 });
 
-                historyContainer.addEventListener('click', function(e) {
-                    const target = e.target;
-                    if (target.classList.contains('remove-row')) {
-                        const row = target.closest('.entry-row');
-                        if (row && historyContainer.children.length > 1) {
-                            row.remove();
-                            compute();
-                        } else if (row) {
-                            alert('至少保留一笔历史记录，以便计算。如需清空请使用"重置"按钮。');
-                        }
-                    }
-                });
-
-                // 添加按钮
-                addHistoryBtn.addEventListener('click', function() {
-                    addHistoryRow('', '');
-                });
-
-                // 新增输入
-                newAmount.addEventListener('input', compute);
-                newPrice.addEventListener('input', compute);
-                newAmount.addEventListener('change', compute);
-                newPrice.addEventListener('change', compute);
-
-                // 重置按钮
-                document.getElementById('resetBtn').addEventListener('click', resetAll);
-
-                // 首次计算
-                compute();
+                console.log('📊 基金持仓成本计算器已就绪');
+                console.log('💾 数据存储在 localStorage:', STORAGE_KEY);
+                console.log('⌨️  快捷键: Ctrl+S 保存 | Ctrl+N 新建');
+                console.log('📥 支持拖拽 .json 备份文件到右侧面板进行导入');
+                console.log('📤 点击"导出"按钮备份数据');
             }
 
             // 启动
-            init();
-
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', init);
+            } else {
+                init();
+            }
         })();
     </script>
-
 </body>
 </html>
